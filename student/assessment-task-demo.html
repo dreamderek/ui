@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MetaMath｜評鑑任務平板 Demo</title>
+  <style>
+    :root {
+      --green: #315c38;
+      --deep: #173d23;
+      --green-soft: #eef6ea;
+      --paper: #fff;
+      --bg: #f5f7f2;
+      --line: #e1e8dc;
+      --ink: #203022;
+      --muted: #718071;
+      --amber: #bd7838;
+      --amber-soft: #fff3df;
+      --blue: #4f798b;
+      --blue-soft: #eaf5f8;
+      --shadow: 0 18px 38px rgba(29, 59, 35, .10);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
+
+    body {
+      min-width: 980px;
+      margin: 0;
+      color: var(--ink);
+      background: var(--bg);
+      font-family: "Microsoft JhengHei", system-ui, sans-serif;
+    }
+
+    button { font: inherit; cursor: pointer; }
+
+    .app {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 78px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      padding: 14px 7px;
+      border-right: 1px solid var(--line);
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .brand {
+      width: 43px;
+      height: 43px;
+      display: grid;
+      place-items: center;
+      border-radius: 13px;
+      color: #fff;
+      background: linear-gradient(135deg, #5c8e55, #1b4929);
+      box-shadow: 0 7px 15px #1b482522;
+      font: 700 21px Georgia, serif;
+    }
+
+    .nav { width: 100%; display: grid; gap: 7px; margin-top: 22px; }
+    .nav button { min-height: 56px; padding: 6px 2px; border: 0; border-radius: 11px; color: #687666; background: transparent; font-size: 10px; font-weight: 800; }
+    .nav span { display: block; margin-bottom: 3px; font-size: 17px; line-height: 18px; }
+    .nav .active { color: var(--green); background: var(--green-soft); box-shadow: inset 3px 0 #557d47; }
+
+    .shell { min-width: 0; height: 100vh; display: grid; grid-template-rows: 68px minmax(0, 1fr); overflow: hidden; }
+    .topbar { padding: 10px 30px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); background: #fffefa; }
+    .school { margin: 0; color: #53793e; font-size: 12px; font-weight: 800; letter-spacing: .03em; }
+    .topbar h1 { margin: 2px 0 0; font: 700 21px Georgia, "Microsoft JhengHei", serif; }
+    .profile { display: flex; align-items: center; gap: 10px; }
+    .class { padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; color: var(--green); background: #f4f7f0; font-size: 12px; font-weight: 800; }
+    .avatar { width: 35px; height: 35px; display: grid; place-items: center; border-radius: 50%; color: #3f6140; background: #eff1e9; font-size: 12px; font-weight: 800; }
+
+    .workspace { min-width: 0; min-height: 0; padding: 18px 28px; overflow: hidden; }
+    .assessment-view { height: 100%; min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 14px; }
+    .assessment-view[hidden] { display: none !important; }
+
+    .view-head { min-height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .eyebrow { margin: 0; color: #53793e; font-size: 12px; font-weight: 800; letter-spacing: .04em; }
+    .view-head h2 { margin: 4px 0 0; font: 700 27px Georgia, "Microsoft JhengHei", serif; }
+    .week-progress { display: flex; align-items: center; gap: 11px; color: #607360; font-size: 12px; font-weight: 800; }
+    .meter { width: 112px; height: 7px; overflow: hidden; border-radius: 99px; background: #e2e9dd; }
+    .meter i { display: block; width: 58%; height: 100%; border-radius: inherit; background: #5d8b54; }
+
+    .task-stage { min-height: 0; display: grid; grid-template-columns: 1.45fr 1fr; grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); gap: 13px; }
+    .task-card { min-width: 0; min-height: 0; padding: 20px; border: 1px solid var(--line); border-radius: 19px; color: var(--ink); background: #fff; box-shadow: 0 5px 14px rgba(28, 61, 33, .035); text-align: left; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+    .task-card:hover, .task-card:focus-visible { border-color: #9db994; box-shadow: var(--shadow); outline: none; transform: translateY(-3px); }
+    .task-card[hidden] { display: none !important; }
+    .task-card.featured { grid-row: 1 / 3; display: flex; flex-direction: column; color: #fff; border: 0; background: linear-gradient(135deg, #173f24 0%, #31683a 56%, #6d9666 100%); box-shadow: 0 15px 30px #214a2b2b; }
+    .task-card.review { background: linear-gradient(140deg, #fcfdfb, #eef6f8); }
+    .task-card.done { background: #fbfdf9; }
+    .task-card.solo { grid-column: 1 / -1; grid-row: 1 / -1; display: flex; flex-direction: column; padding: 28px; background: linear-gradient(135deg, #fff, #f1f8ee); }
+    .task-card.solo h3 { margin-top: auto; font: 700 clamp(28px, 3vw, 42px) Georgia, "Microsoft JhengHei", serif; }
+    .task-card.solo p { max-width: 560px; font-size: 15px; }
+    .task-card.solo .task-meta { margin-top: 24px; }
+    .card-top { display: flex; align-items: start; justify-content: space-between; gap: 10px; }
+    .status { display: inline-flex; align-items: center; padding: 5px 9px; border-radius: 99px; color: #79520e; background: var(--amber-soft); font-size: 11px; font-weight: 800; }
+    .featured .status { color: #e5f5d7; border: 1px solid #ddf3d56b; background: #ffffff18; }
+    .review .status { color: #467284; background: var(--blue-soft); }
+    .done .status { color: #407652; background: #e7f5ea; }
+    .dots { color: inherit; opacity: .62; font-size: 21px; letter-spacing: 2px; line-height: .55; }
+    .task-card h3 { margin: 18px 0 8px; font-size: 20px; line-height: 1.4; }
+    .featured h3 { margin-top: auto; font: 700 clamp(25px, 2.5vw, 36px) Georgia, "Microsoft JhengHei", serif; line-height: 1.28; }
+    .task-card p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.7; }
+    .featured p { max-width: 450px; color: #deeddb; font-size: 14px; }
+    .card-stat { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: auto; padding-top: 16px; }
+    .card-stat div { padding: 10px; border-radius: 10px; background: #ffffff14; }
+    .card-stat span { display: block; margin-bottom: 3px; color: #d6ead1; font-size: 11px; }
+    .card-stat b { font-size: 13px; }
+    .task-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 12px; border-top: 1px solid #e8eee5; color: #6d7d6d; font-size: 11px; }
+    .task-meta strong { color: #415e45; }
+    .review .task-meta strong { color: #4a7180; }
+    .task-meta .due { color: #a76b2e; }
+
+    .status-dock { display: flex; justify-content: center; gap: 8px; }
+    .status-tab { min-width: 106px; padding: 10px 13px; border: 1px solid var(--line); border-radius: 11px; color: #6c7a6b; background: #fff; font-size: 12px; font-weight: 800; transition: .18s ease; }
+    .status-tab:hover, .status-tab:focus-visible { border-color: #a7c29e; color: var(--green); outline: none; }
+    .status-tab.active { color: var(--deep); border-color: #87aa7e; background: var(--green-soft); box-shadow: inset 0 0 0 1px #d1e4ca; }
+
+    .detail-view { height: 100%; min-height: 0; display: none; grid-template-rows: auto minmax(0, 1fr); gap: 14px; }
+    .detail-view.show { display: grid; }
+    .back { padding: 8px 11px; border: 1px solid var(--line); border-radius: 9px; color: #456244; background: #fff; font-size: 12px; font-weight: 800; }
+    .back:hover { background: var(--green-soft); }
+    .detail-panel { min-height: 0; overflow: hidden; display: grid; grid-template-columns: 1.15fr .85fr; border: 1px solid var(--line); border-radius: 20px; background: #fff; box-shadow: var(--shadow); }
+    .detail-main { min-width: 0; padding: 32px; display: flex; flex-direction: column; background: linear-gradient(155deg, #fff, #f5faf1); }
+    .detail-main h2 { max-width: 600px; margin: 13px 0 10px; font: 700 clamp(29px, 3vw, 43px) Georgia, "Microsoft JhengHei", serif; line-height: 1.22; }
+    .detail-main > p { max-width: 560px; margin: 0; color: #657565; font-size: 15px; line-height: 1.8; }
+    .step-rail { display: flex; gap: 7px; margin-top: auto; padding-top: 24px; }
+    .step { flex: 1; min-height: 92px; padding: 12px; border: 1px solid #dfe9d9; border-radius: 11px; background: #fff; }
+    .step.active { color: #fff; border-color: #417544; background: #417544; }
+    .step span { display: block; margin-bottom: 7px; color: #829182; font-size: 11px; }
+    .step.active span { color: #dcefd7; }
+    .step strong { font-size: 12px; }
+    .detail-side { padding: 25px; color: #fff; background: linear-gradient(155deg, #1b4829, #315f39); display: flex; flex-direction: column; }
+    .detail-side h3 { margin: 11px 0 5px; font: 700 22px Georgia, "Microsoft JhengHei", serif; }
+    .detail-side p { margin: 0; color: #dbead7; font-size: 13px; line-height: 1.7; }
+    .score-ring { width: 132px; height: 132px; margin: 26px auto 18px; display: grid; place-items: center; border: 12px solid #97c28b; border-left-color: #ffffff36; border-radius: 50%; }
+    .score-ring b { font: 700 31px Georgia, serif; }
+    .detail-side ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+    .detail-side li { padding: 10px; border-radius: 8px; background: #ffffff12; color: #e3f1df; font-size: 12px; }
+    .start { margin-top: auto; padding: 12px 15px; border: 0; border-radius: 10px; color: #183f24; background: #fff; font-size: 13px; font-weight: 800; }
+    .start:hover { background: #e7f3e2; }
+
+    /* 評鑑任務：上方聚焦、下方橫向卡軌 */
+    .task-stage { display: grid; grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) auto; gap: 14px; }
+    .focus-panel { min-height: 0; overflow: hidden; display: grid; grid-template-columns: 1.2fr .8fr; border: 1px solid #255532; border-radius: 21px; color: #fff; background: linear-gradient(125deg, #183f24 0%, #2d6538 58%, #679062 100%); box-shadow: 0 16px 31px #214a2b2b; }
+    .focus-copy { padding: clamp(23px, 3vw, 38px); display: flex; flex-direction: column; }
+    .focus-copy h3 { max-width: 620px; margin: 15px 0 9px; font: 700 clamp(27px, 3vw, 42px) Georgia, "Microsoft JhengHei", serif; line-height: 1.22; }
+    .focus-copy p { max-width: 560px; margin: 0; color: #dcebd9; font-size: 14px; line-height: 1.75; }
+    .focus-meta { display: flex; gap: 9px; margin-top: auto; padding-top: 20px; }
+    .focus-meta div { min-width: 118px; padding: 10px 12px; border-radius: 10px; background: #ffffff15; }
+    .focus-meta span { display: block; margin-bottom: 3px; color: #d7ead3; font-size: 11px; }
+    .focus-meta strong { font-size: 13px; }
+    .open-focus { align-self: flex-start; margin-top: 17px; padding: 10px 14px; border: 0; border-radius: 9px; color: #1b4828; background: #fff; font-size: 13px; font-weight: 800; }
+    .open-focus:hover { background: #e8f4e3; }
+    .focus-orbit { position: relative; display: grid; place-items: center; overflow: hidden; background: #ffffff0a; }
+    .focus-orbit::before, .focus-orbit::after { content: ""; position: absolute; border: 1px solid #ffffff38; border-radius: 50%; }
+    .focus-orbit::before { width: 230px; height: 230px; }
+    .focus-orbit::after { width: 330px; height: 330px; }
+    .focus-token { position: relative; z-index: 1; width: 148px; height: 148px; display: grid; place-items: center; border: 11px solid #b6dba9; border-right-color: #ffffff2c; border-radius: 50%; box-shadow: 0 0 0 15px #ffffff0d; }
+    .focus-token b { font: 700 33px Georgia, serif; }
+    .focus-token span { margin-top: -25px; transform: translateY(25px); color: #dff0db; font-size: 11px; }
+
+    .task-carousel { display: grid; grid-template-columns: 49px minmax(0, 1fr) 49px; align-items: center; gap: 11px; }
+    .stack-control { height: 105px; padding: 0; border: 1px solid var(--line); border-radius: 13px; color: #4b704c; background: #fff; display: grid; place-items: center; gap: 4px; transition: .18s ease; }
+    .stack-control:hover, .stack-control:focus-visible { color: var(--deep); border-color: #91b088; background: var(--green-soft); outline: none; transform: translateY(-2px); }
+    .stack-mark { position: relative; width: 24px; height: 19px; display: block; }
+    .stack-mark i { position: absolute; width: 17px; height: 10px; border: 2px solid currentColor; border-radius: 3px; background: #fff; }
+    .stack-mark i:nth-child(1) { left: 0; bottom: 0; }
+    .stack-mark i:nth-child(2) { left: 4px; bottom: 4px; opacity: .7; }
+    .stack-mark i:nth-child(3) { left: 8px; bottom: 8px; opacity: .42; }
+    .stack-control b { font-size: 17px; line-height: 1; }
+    .task-rail { min-width: 0; display: flex; gap: 10px; overflow-x: auto; padding: 2px; scroll-snap-type: x proximity; scrollbar-width: none; }
+    .task-rail::-webkit-scrollbar { display: none; }
+    .task-rail.expanding.to-right .task-card { animation: card-expand-right .26s both; }
+    .task-rail.expanding.to-right .task-card:nth-child(2) { animation-delay: .05s; }
+    .task-rail.expanding.to-right .task-card:nth-child(3) { animation-delay: .1s; }
+    .task-rail.expanding.to-right .task-card:nth-child(n+4) { animation-delay: .14s; }
+    .task-rail.expanding.to-left { transform-origin: right center; animation: rail-expand-left .32s ease-out both; }
+    @keyframes card-expand-right { from { opacity: 0; transform: translateX(-72px) scaleX(.35); } to { opacity: 1; transform: translateX(0) scaleX(1); } }
+    @keyframes rail-expand-left { from { clip-path: inset(0 0 0 100%); } to { clip-path: inset(0 0 0 0); } }
+    .task-card { flex: 0 0 205px; min-height: 105px; height: 105px; padding: 13px 15px; border-radius: 14px; box-shadow: none; overflow: hidden; scroll-snap-align: start; }
+    .task-card.featured { grid-row: auto; display: block; color: var(--ink); border: 1px solid var(--line); background: #fff; box-shadow: none; }
+    .task-card.review { background: #f7fbfc; }
+    .task-card h3, .featured h3 { margin: 7px 0 3px; font: 700 14px "Microsoft JhengHei", system-ui, sans-serif; line-height: 1.35; }
+    .task-card p, .featured p { display: -webkit-box; overflow: hidden; margin: 0; color: var(--muted); font-size: 11px; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+    .task-card .card-top { align-items: center; }
+    .task-card .dots { font-size: 14px; }
+    .task-card .status { padding: 3px 7px; font-size: 10px; }
+    .task-card .card-stat, .task-card .task-meta { display: none; }
+    .task-card.selected { border-color: #6b9662; background: var(--green-soft); box-shadow: inset 0 0 0 1px #cae0c3; }
+    .status-dock { display: none; }
+    .stack-control small { font-size: 9px; font-weight: 800; }
+    .stack-control.active { color: var(--deep); border-color: #87aa7e; background: var(--green-soft); box-shadow: inset 0 0 0 1px #d1e4ca; }
+
+    @media (max-width: 1120px) {
+      .workspace { padding-inline: 20px; }
+      .task-card { padding: 16px; }
+      .detail-main { padding: 25px; }
+      .detail-side { padding: 20px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="主導覽">
+      <div class="brand">M</div>
+      <nav class="nav">
+        <button type="button"><span>⌂</span>總覽</button>
+        <button type="button" class="active"><span>✓</span>評鑑</button>
+        <button type="button"><span>↗</span>歷程</button>
+        <button type="button"><span>✉</span>訊息</button>
+        <button type="button"><span>◉</span>帳號</button>
+      </nav>
+    </aside>
+
+    <div class="shell">
+      <header class="topbar">
+        <div><p class="school">Derekknight · 國中數學</p><h1>學習評鑑</h1></div>
+        <div class="profile"><button class="class" type="button">八年二班</button><div class="avatar">De</div></div>
+      </header>
+
+      <main class="workspace">
+        <section class="assessment-view" id="assessmentHome" aria-label="評鑑任務">
+          <header class="view-head">
+            <div><p class="eyebrow">ASSESSMENT SPACE</p><h2>目前評鑑任務</h2></div>
+            <div class="week-progress"><span>本週 7 / 12</span><div class="meter"><i></i></div><span>58%</span></div>
+          </header>
+
+          <div class="task-stage" id="taskStage">
+            <section class="focus-panel" aria-live="polite">
+              <div class="focus-copy">
+                <span class="status" id="focusStatus">今日到期</span>
+                <h3 id="focusTitle">單元評量｜代數式化簡</h3>
+                <p id="focusDescription">已完成 6 / 14 題。繼續作答後，系統會保留目前進度並提供即時提示。</p>
+                <div class="focus-meta"><div><span id="focusMetaOneLabel">剩餘時間</span><strong id="focusMetaOne">5 小時 42 分</strong></div><div><span id="focusMetaTwoLabel">目前進度</span><strong id="focusMetaTwo">42% 完成</strong></div></div>
+                <button class="open-focus" type="button" id="openSelected">繼續作答</button>
+              </div>
+              <div class="focus-orbit"><div class="focus-token"><b id="focusPercent">42%</b><span>任務進度</span></div></div>
+            </section>
+
+            <section class="task-carousel" aria-label="評鑑任務卡">
+              <button class="stack-control" type="button" id="completedStack" aria-label="切換已完成任務"><span class="stack-mark" aria-hidden="true"><i></i><i></i><i></i></span><small>已完成</small></button>
+              <div class="task-rail" id="taskRail" aria-live="polite"></div>
+              <button class="stack-control active" type="button" id="activeStack" aria-label="切換未交卷與申覆中任務"><span class="stack-mark" aria-hidden="true"><i></i><i></i><i></i></span><small>未交／申覆</small></button>
+            </section>
+          </div>
+        </section>
+
+        <section class="detail-view" id="taskDetail" aria-label="任務詳情">
+          <header class="view-head"><button class="back" type="button" id="backToTasks">← 返回評鑑任務</button><div class="week-progress"><span>評鑑進度</span><div class="meter"><i id="detailProgress"></i></div><span id="detailPercent">42%</span></div></header>
+          <article class="detail-panel">
+            <div class="detail-main">
+              <span class="status" id="detailStatus">今日到期</span>
+              <h2 id="detailTitle">單元評量｜代數式化簡</h2>
+              <p id="detailDescription">完成運算題與情境應用題；作答過程會保留，並依你的回答提供學習提示。</p>
+              <div class="step-rail"><div class="step active"><span>STEP 1</span><strong>概念暖身</strong></div><div class="step"><span>STEP 2</span><strong>核心題組</strong></div><div class="step"><span>STEP 3</span><strong>情境應用</strong></div></div>
+            </div>
+            <aside class="detail-side">
+              <p>任務快覽</p><h3 id="sideHeading">準備繼續作答</h3><div class="score-ring"><b id="scoreText">42%</b></div>
+              <ul><li id="detailDue">截止：今天 23:59</li><li id="detailTime">預估：20 分鐘</li><li id="detailNote">完成後立即更新能力紀錄</li></ul>
+              <button class="start" type="button" id="startTask">繼續作答</button>
+            </aside>
+          </article>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script type="text/plain">
+    const taskData = {
+      algebra: { status: '今日到期', title: '單元評量｜代數式化簡', description: '完成運算題與情境應用題；作答過程會保留，並依你的回答提供學習提示。', progress: 42, heading: '準備繼續作答', due: '截止：今天 23:59', time: '預估：20 分鐘', note: '完成後立即更新能力紀錄', action: '繼續作答' },
+      function: { status: '待老師批閱', title: '探究任務｜一次函數圖形', description: '你已完成圖形繪製與推論說明。老師會根據你的解題策略提供個別回饋。', progress: 100, heading: '等待老師回饋', due: '送出：昨天 16:20', time: '類型：開放題', note: '批閱完成後將傳送通知', action: '查看提交內容' },
+      equation: { status: '已完成', title: '能力檢核｜一元一次方程式', description: '基礎與進階題均已完成。可查看這次的表現摘要，並將錯題加入複習。', progress: 100, heading: '完成得分 92 分', due: '完成：10/06', time: '建議：查看能力分析', note: '錯題已加入複習建議', action: '查看分析' }
+    };
+
+    const home = document.querySelector('#assessmentHome');
+    const detail = document.querySelector('#taskDetail');
+    const cards = [...document.querySelectorAll('.task-card')];
+    let selectedTask = 'algebra';
+
+    function selectTask(id) {
+      selectedTask = id;
+      const task = taskData[id];
+      document.querySelector('#focusStatus').textContent = task.status;
+      document.querySelector('#focusTitle').textContent = task.title;
+      document.querySelector('#focusDescription').textContent = task.description;
+      document.querySelector('#focusPercent').textContent = `${task.progress}%`;
+      document.querySelector('#openSelected').textContent = task.action;
+      document.querySelector('#focusMetaOneLabel').textContent = task.status === '已完成' ? '完成時間' : task.status === '待老師批閱' ? '送出時間' : '截止時間';
+      document.querySelector('#focusMetaOne').textContent = task.due.replace(/^(截止：|送出：|完成：)/, '');
+      document.querySelector('#focusMetaTwoLabel').textContent = task.status === '已完成' ? '學習建議' : task.status === '待老師批閱' ? '任務類型' : '預估時間';
+      document.querySelector('#focusMetaTwo').textContent = task.time.replace(/^(預估：|類型：|建議：)/, '');
+      cards.forEach(card => card.classList.toggle('selected', card.dataset.task === id));
+    }
+
+    function openTask(id) {
+      selectedTask = id;
+      const task = taskData[id];
+      document.querySelector('#detailStatus').textContent = task.status;
+      document.querySelector('#detailTitle').textContent = task.title;
+      document.querySelector('#detailDescription').textContent = task.description;
+      document.querySelector('#detailProgress').style.width = `${task.progress}%`;
+      document.querySelector('#detailPercent').textContent = `${task.progress}%`;
+      document.querySelector('#scoreText').textContent = `${task.progress}%`;
+      document.querySelector('#sideHeading').textContent = task.heading;
+      document.querySelector('#detailDue').textContent = task.due;
+      document.querySelector('#detailTime').textContent = task.time;
+      document.querySelector('#detailNote').textContent = task.note;
+      document.querySelector('#startTask').textContent = task.action;
+      home.hidden = true;
+      detail.classList.add('show');
+    }
+
+    cards.forEach(card => card.addEventListener('click', () => selectTask(card.dataset.task)));
+    document.querySelector('#openSelected').addEventListener('click', () => openTask(selectedTask));
+    document.querySelector('#backToTasks').addEventListener('click', () => { detail.classList.remove('show'); home.hidden = false; });
+    document.querySelector('#previousTask').addEventListener('click', () => {
+      const index = cards.findIndex(card => card.dataset.task === selectedTask);
+      selectTask(cards[(index - 1 + cards.length) % cards.length].dataset.task);
+    });
+    document.querySelector('#nextTask').addEventListener('click', () => {
+      const index = cards.findIndex(card => card.dataset.task === selectedTask);
+      selectTask(cards[(index + 1) % cards.length].dataset.task);
+    });
+
+    document.querySelector('#startTask').addEventListener('click', () => {
+      const button = document.querySelector('#startTask');
+      button.textContent = selectedTask === 'function' ? '已開啟提交內容' : selectedTask === 'equation' ? '已開啟能力分析' : '已進入作答';
+    });
+  </script>
+  <script>
+    const taskData = {
+      algebra: { state: 'unsubmitted', status: '未交卷', title: '單元評量｜代數式化簡', description: '已完成 6 / 14 題。繼續作答後，系統會保留目前進度並提供即時提示。', progress: 42, heading: '準備繼續作答', due: '今天 23:59', time: '約 20 分鐘', note: '完成後立即更新能力紀錄', action: '繼續作答' },
+      geometry: { state: 'unsubmitted', status: '未交卷', title: '學習診斷｜三角形性質', description: '系統依你的作答調整題目，找出仍需加強的概念。', progress: 68, heading: '可繼續完成診斷', due: '10/12 23:59', time: '約 15 分鐘', note: '已完成 17 / 25 題', action: '繼續作答' },
+      data: { state: 'unsubmitted', status: '未交卷', title: '隨堂練習｜資料分析', description: '閱讀班級調查資料，完成圖表判讀與數據比較。', progress: 0, heading: '尚未開始', due: '10/14 23:59', time: '約 12 分鐘', note: '共 8 題圖表題', action: '開始任務' },
+      probability: { state: 'unsubmitted', status: '未交卷', title: '單元挑戰｜機率初探', description: '從生活情境中判讀事件機率並完成推論。', progress: 18, heading: '已儲存目前進度', due: '10/16 23:59', time: '約 18 分鐘', note: '已完成 2 / 11 題', action: '繼續作答' },
+      function: { state: 'appeal', status: '申覆中', title: '探究任務｜一次函數圖形', description: '已提出成績申覆，老師正在檢視圖形與推論說明。', progress: 100, heading: '等待申覆結果', due: '送出：昨天 16:20', time: '開放題', note: '結果將透過訊息通知', action: '查看提交內容' },
+      ratio: { state: 'completed', status: '已完成', title: '單元複習｜比例與速率', description: '已完成本任務，錯題已加入個人複習建議。', progress: 100, heading: '完成得分 83 分', due: '完成：10/08', time: '可查看錯題', note: '已新增 2 題複習', action: '查看報告' },
+      equation: { state: 'completed', status: '已完成', title: '能力檢核｜一元一次方程式', description: '基礎與進階題均已完成，可查看能力分析與錯題建議。', progress: 100, heading: '完成得分 92 分', due: '完成：10/06', time: '可查看分析', note: '能力紀錄已更新', action: '查看分析' },
+      ratio2: { state: 'completed', status: '已完成', title: '綜合評量｜比與比例式', description: '已完成計算與應用題，表現穩定。', progress: 100, heading: '完成得分 88 分', due: '完成：09/30', time: '可查看報告', note: '建議挑戰進階題', action: '查看報告' }
+    };
+
+    const taskOrder = ['algebra', 'geometry', 'data', 'probability', 'function', 'ratio', 'equation', 'ratio2'];
+    const home = document.querySelector('#assessmentHome');
+    const detail = document.querySelector('#taskDetail');
+    const rail = document.querySelector('#taskRail');
+    const completedStack = document.querySelector('#completedStack');
+    const activeStack = document.querySelector('#activeStack');
+    let selectedTask = 'algebra';
+    let activeGroup = 'active';
+    let railSwitching = false;
+
+    function cardClass(task) {
+      return task.state === 'completed' ? 'done' : task.state === 'appeal' ? 'review' : '';
+    }
+
+    function updateFocus(id) {
+      selectedTask = id;
+      const task = taskData[id];
+      document.querySelector('#focusStatus').textContent = task.status;
+      document.querySelector('#focusTitle').textContent = task.title;
+      document.querySelector('#focusDescription').textContent = task.description;
+      document.querySelector('#focusPercent').textContent = `${task.progress}%`;
+      document.querySelector('#openSelected').textContent = task.action;
+      document.querySelector('#focusMetaOneLabel').textContent = task.state === 'completed' ? '完成時間' : task.state === 'appeal' ? '送出時間' : '截止時間';
+      document.querySelector('#focusMetaOne').textContent = task.due.replace(/^(截止：|送出：|完成：)/, '');
+      document.querySelector('#focusMetaTwoLabel').textContent = task.state === 'completed' ? '學習建議' : task.state === 'appeal' ? '任務類型' : '預估時間';
+      document.querySelector('#focusMetaTwo').textContent = task.time.replace(/^(預估：|類型：|建議：)/, '');
+      [...rail.children].forEach(card => card.classList.toggle('selected', card.dataset.task === id));
+    }
+
+    function renderRail(group) {
+      activeGroup = group;
+      const ids = taskOrder.filter(id => group === 'completed' ? taskData[id].state === 'completed' : taskData[id].state !== 'completed');
+      rail.innerHTML = ids.map(id => {
+        const task = taskData[id];
+        return `<button class="task-card ${cardClass(task)}" type="button" data-task="${id}"><div class="card-top"><span class="status">${task.status}</span><span class="dots">•••</span></div><h3>${task.title}</h3><p>${task.description}</p></button>`;
+      }).join('');
+      rail.scrollLeft = 0;
+      completedStack.classList.toggle('active', group === 'completed');
+      activeStack.classList.toggle('active', group === 'active');
+      updateFocus(ids.includes(selectedTask) ? selectedTask : ids[0]);
+    }
+
+    function switchRail(group) {
+      if (railSwitching || group === activeGroup) return;
+      railSwitching = true;
+      const direction = group === 'completed' ? 'to-right' : 'to-left';
+      renderRail(group);
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          rail.classList.add('expanding', direction);
+          window.setTimeout(() => {
+            rail.classList.remove('expanding', direction);
+            railSwitching = false;
+          }, 290);
+        });
+      });
+    }
+
+    function openTask(id) {
+      selectedTask = id;
+      const task = taskData[id];
+      document.querySelector('#detailStatus').textContent = task.status;
+      document.querySelector('#detailTitle').textContent = task.title;
+      document.querySelector('#detailDescription').textContent = task.description;
+      document.querySelector('#detailProgress').style.width = `${task.progress}%`;
+      document.querySelector('#detailPercent').textContent = `${task.progress}%`;
+      document.querySelector('#scoreText').textContent = `${task.progress}%`;
+      document.querySelector('#sideHeading').textContent = task.heading;
+      document.querySelector('#detailDue').textContent = task.due;
+      document.querySelector('#detailTime').textContent = task.time;
+      document.querySelector('#detailNote').textContent = task.note;
+      document.querySelector('#startTask').textContent = task.action;
+      home.hidden = true;
+      detail.classList.add('show');
+    }
+
+    rail.addEventListener('click', event => {
+      const card = event.target.closest('[data-task]');
+      if (card) updateFocus(card.dataset.task);
+    });
+    completedStack.addEventListener('click', () => switchRail('completed'));
+    activeStack.addEventListener('click', () => switchRail('active'));
+    document.querySelector('#openSelected').addEventListener('click', () => openTask(selectedTask));
+    document.querySelector('#backToTasks').addEventListener('click', () => { detail.classList.remove('show'); home.hidden = false; renderRail(activeGroup); });
+    document.querySelector('#startTask').addEventListener('click', () => {
+      const button = document.querySelector('#startTask');
+      button.textContent = taskData[selectedTask].state === 'completed' ? '已開啟分析' : taskData[selectedTask].state === 'appeal' ? '已開啟提交內容' : '已進入作答';
+    });
+
+    renderRail('active');
+  </script>
+</body>
+
+</html>
