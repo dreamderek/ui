@@ -1,55 +1,1051 @@
 <!doctype html>
 <html lang="zh-Hant">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MetaMath｜學生學習主頁</title>
   <style>
-    :root { --green:#315c38; --deep:#183f24; --soft:#f1f6ed; --paper:#fff; --bg:#f8f9f5; --line:#e1e7dc; --ink:#1d2d20; --muted:#718071; --amber:#bf7537; }
-    * { box-sizing:border-box; } html,body { width:100%;height:100%;overflow:hidden; }
-    body { margin:0; min-width:980px; background:var(--bg); color:var(--ink); font-family:"Microsoft JhengHei",system-ui,sans-serif; } button { font:inherit; cursor:pointer; }
-    .app { width:100vw; height:100vh; display:grid; grid-template-columns:104px minmax(0,1fr); overflow:hidden; }
-    .sidebar { position:fixed; inset:0 auto 0 0; z-index:3; width:104px; padding:22px 9px; background:#fff; border-right:1px solid var(--line); display:flex; flex-direction:column; align-items:center; }
-    .brand { width:52px; height:52px; display:grid; place-items:center; border-radius:16px; background:linear-gradient(135deg,#568a51,#1c492a); color:white; box-shadow:0 7px 15px #1b482522; font:700 24px Georgia; }
-    .nav { width:100%; display:grid; gap:10px; margin-top:34px; }.nav button { min-height:67px; border:0; border-radius:13px; color:#687666; background:transparent; font-size:12px; font-weight:800; }.nav span { display:block; margin-bottom:5px; font-size:20px; line-height:21px; }.nav .active { color:var(--green); background:var(--soft); box-shadow:inset 3px 0 #557d47; }
-    .shell { grid-column:2; min-width:0; height:100vh; display:grid; grid-template-rows:99px minmax(0,1fr); overflow:hidden; }.topbar { position:fixed; top:0; left:104px; right:0; z-index:2; height:99px; padding:17px 38px; display:flex; align-items:center; justify-content:space-between; background:#fffefa; border-bottom:1px solid var(--line); }.eyebrow,.overline { margin:0; color:#53793e; font-size:12px; font-weight:800; letter-spacing:.03em; }h1,h2,h3 { font-family:Georgia,"Microsoft JhengHei",serif; }h1 { margin:4px 0 0; font-size:28px; }.tools { display:flex; align-items:center; gap:11px; }.school,.bell { border:1px solid var(--line); background:#f4f7f0; color:#315e38; }.school { padding:10px 14px; border-radius:13px; font-weight:800; }.bell,.avatar { width:44px;height:44px;display:grid;place-items:center;border-radius:50%; }.bell { font-size:19px; }.avatar { background:#eff1e9;color:#3f6140;font-weight:800; }
-    .workspace { grid-row:2; min-height:0; padding:22px 38px 26px; display:grid; grid-template-rows:auto minmax(0,1fr); gap:15px; overflow:hidden; }.screen-heading { display:flex; align-items:end; justify-content:space-between; }.screen-heading h2 { margin:4px 0 0; font-size:24px; }.hint { color:var(--muted); font-size:13px; }.switcher { display:flex; align-items:center; gap:11px; }.counter { color:#57704f; font-size:13px; font-weight:800; }.arrow { width:34px; height:34px; border:1px solid #d8e1d2; border-radius:10px; background:#fff; color:#355f39; font-size:19px; }
-    .viewport { min-height:0; overflow:hidden; border-radius:20px; touch-action:pan-y; }.track { height:100%; display:flex; transition:transform .34s ease; }.panel { flex:0 0 100%; height:100%; min-width:0; overflow:hidden; padding:22px; border:1px solid var(--line); border-radius:20px; background:var(--paper); }.panel-head { height:49px; display:flex; align-items:start; justify-content:space-between; gap:20px; }.panel-head h3 { margin:4px 0 0; font-size:23px; }.panel-head .action { border:0; background:transparent; color:#36703b; font-size:13px; font-weight:800; }.content { height:calc(100% - 49px); min-height:0; }
-    .button { border:0; border-radius:9px; padding:10px 14px; font-size:13px; font-weight:800; }.button.primary { color:#fff; background:#2e6538; }.button.light { color:#285d32; background:var(--soft); border:1px solid #cadfc1; }
-    .focus-layout { display:grid; grid-template-columns:1.34fr .82fr; gap:16px; }.hero { min-height:0; padding:31px; border-radius:17px; color:white; background:linear-gradient(122deg,#183d22,#2f6739 55%,#4d8b9c); }.hero .overline { color:#dcefcf; }.hero h3 { margin:7px 0 10px; font-size:34px; }.hero p { font-size:15px; }.tag { display:inline-block; margin-top:5px; padding:5px 9px; border:1px solid #fff8; border-radius:7px; font-size:13px; font-weight:800; }.hero-actions { display:flex; gap:8px; margin-top:17px; }.hero-actions .primary { color:#183f22; background:#fff; }.hero-actions .outline { border:1px solid #fff9; color:#fff; background:transparent; }.insight { display:flex; flex-direction:column; justify-content:center; padding:25px; border:1px solid var(--line); border-radius:17px; background:#fbfcf8; }.insight strong { margin:12px 0 8px; font:700 22px Georgia,"Microsoft JhengHei",serif; }.insight p { margin:0; color:var(--muted); font-size:14px; line-height:1.75; }
-    .assessment-layout { display:grid; grid-template-columns:1.08fr .92fr; gap:16px; }.stack { display:grid; gap:11px; }.task-card { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:12px; padding:16px; border:1px solid var(--line); border-radius:13px; background:#fcfcf9; }.task-card strong { display:block; margin-bottom:5px; }.task-card small { color:var(--muted); }.pill { display:inline-block; padding:4px 8px; border-radius:99px; color:#8a6724; background:#fff3d3; font-size:11px; font-weight:800; }.deadline { padding:22px; border-radius:15px; background:#fff7e3; }.deadline h4 { margin:9px 0;font-size:19px; }.deadline p { color:#766c53;font-size:14px;line-height:1.7; }.deadline .button { margin-top:10px;background:#fff;color:#6b541c; }
-    .knowledge-layout { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; }.knowledge-card { position:relative; padding:22px; border:1px solid var(--line); border-radius:15px; background:#fbfcf9; overflow:hidden; }.knowledge-card::after { content:""; position:absolute; right:-21px; bottom:-30px; width:100px; height:100px; border-radius:50%; background:#e5f0de; }.knowledge-card h4 { position:relative; z-index:1; margin:10px 0 12px; font:700 20px Georgia,"Microsoft JhengHei",serif; }.knowledge-card p { position:relative;z-index:1;color:var(--muted);line-height:1.7;font-size:13px; }.knowledge-card b { position:relative;z-index:1;color:#32633a;font-size:25px; }.progress { position:relative;z-index:1;height:8px;margin-top:14px;border-radius:10px;background:#e6ece2; }.progress i { display:block;height:100%;border-radius:inherit;background:#638e56; }
-    .messages-layout { display:grid;grid-template-columns:1fr .78fr;gap:18px; }.message-list { border:1px solid var(--line); border-radius:15px; padding:0 18px; }.message { display:grid;grid-template-columns:45px minmax(0,1fr) auto;align-items:center;gap:12px;padding:17px 0;border-bottom:1px solid var(--line); }.message:last-child { border-bottom:0; }.author { width:42px;height:42px;display:grid;place-items:center;border-radius:50%;background:#f3dc8e;color:#785f1e;font-weight:800; }.message strong,.message small { display:block; }.message small { margin-top:5px;color:var(--muted); }.unread { color:var(--amber);font-size:11px;font-weight:800; }.notice { padding:24px;border-radius:15px;color:white;background:linear-gradient(145deg,#325f38,#1e4a29); }.notice h4 { margin:12px 0;font:700 23px Georgia,"Microsoft JhengHei",serif; }.notice p { line-height:1.8;color:#d9ead6;font-size:14px; }.notice button { margin-top:10px;color:#264d2d;background:white; }
-    .steps-layout { display:grid;grid-template-rows:auto 1fr;gap:17px; }.stat-row { display:grid;grid-template-columns:repeat(4,1fr);gap:12px; }.stat { padding:18px;border:1px solid var(--line);border-radius:13px;background:#fafbf7; }.stat span { color:var(--muted);font-size:13px; }.stat b { display:block;margin:10px 0 4px;color:#2c5d34;font:700 26px Georgia,"Microsoft JhengHei",serif; }.stat small { color:#788379;font-size:11px; }.step-detail { display:grid;place-items:center;border:1px dashed #cfdcc8;border-radius:15px;background:#fcfdfb;color:#60735f;text-align:center; }.step-detail strong { display:block;margin-bottom:7px;color:#375e39;font-size:18px; }
-    .review-layout { display:grid;grid-template-columns:1.25fr .75fr;gap:16px; }.review-list { display:grid;gap:11px; }.review { display:grid;grid-template-columns:45px minmax(0,1fr) auto;align-items:center;gap:13px;padding:14px;border:1px solid var(--line);border-radius:13px;background:#fcfcfa; }.review-number { width:43px;height:43px;display:grid;place-items:center;border-radius:11px;background:#fff0df;color:#a46129;font-weight:800; }.review p { margin:4px 0 0;color:var(--muted);font-size:13px; }.review-side { padding:22px;border-radius:15px;background:#f1f6ed; }.review-side h4 { margin:10px 0;font-size:20px; }.review-side p { color:#637564;line-height:1.7;font-size:14px; }
-    .ability-layout { display:grid;grid-template-columns:1.1fr .9fr;gap:18px; }.chart-box,.ability-summary { padding:22px;border:1px solid var(--line);border-radius:16px;background:#fcfdf9; }.bars { height:calc(100% - 45px);min-height:175px;display:flex;align-items:end;justify-content:space-around;gap:25px;padding:22px 26px 0;background:repeating-linear-gradient(to bottom,transparent 0 41px,#edf1e9 42px); }.bar-wrap { height:100%;display:flex;flex:1;flex-direction:column;justify-content:end;align-items:center;gap:8px;text-align:center;font-size:12px; }.bar { width:min(54px,70%);border-radius:8px 8px 2px 2px;background:linear-gradient(#6b985d,#376d3e); }.ability-summary { display:flex;flex-direction:column;justify-content:center; }.ability-summary h4 { margin:10px 0;font-size:22px; }.ability-summary p { color:var(--muted);line-height:1.75; }.legend { display:grid;gap:10px;margin-top:12px; }.legend div { padding:10px;border-radius:9px;background:#f1f6ed;color:#416541;font-size:13px;font-weight:800; }
-    .dots { display:flex;justify-content:center;gap:7px;margin-top:14px; }.dot { width:8px;height:8px;padding:0;border:0;border-radius:10px;background:#c9d2c5; }.dot.active { width:25px;background:#4a7944; }
-    @media (max-width:1150px) { .topbar { padding-inline:24px; }.workspace { padding-inline:24px; }.hero { padding:23px; }.knowledge-card { padding:16px; }.panel { padding:18px; } }
+    :root {
+      --green: #315c38;
+      --deep: #183f24;
+      --soft: #f1f6ed;
+      --paper: #fff;
+      --bg: #f8f9f5;
+      --line: #e1e7dc;
+      --ink: #1d2d20;
+      --muted: #718071;
+      --amber: #bf7537;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      margin: 0;
+      min-width: 980px;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Microsoft JhengHei", system-ui, sans-serif;
+    }
+
+    button {
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .app {
+      width: 100vw;
+      height: 100vh;
+      display: grid;
+      grid-template-columns: 78px minmax(0, 1fr);
+      overflow: hidden;
+    }
+
+    .sidebar {
+      position: fixed;
+      inset: 0 auto 0 0;
+      z-index: 3;
+      width: 78px;
+      padding: 14px 7px;
+      background: #fff;
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .brand {
+      width: 43px;
+      height: 43px;
+      display: grid;
+      place-items: center;
+      border-radius: 13px;
+      background: linear-gradient(135deg, #568a51, #1c492a);
+      color: white;
+      box-shadow: 0 7px 15px #1b482522;
+      font: 700 21px Georgia;
+    }
+
+    .nav {
+      width: 100%;
+      display: grid;
+      gap: 7px;
+      margin-top: 22px;
+    }
+
+    .nav button {
+      min-height: 56px;
+      border: 0;
+      border-radius: 11px;
+      color: #687666;
+      background: transparent;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .nav span {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 17px;
+      line-height: 18px;
+    }
+
+    .nav .active {
+      color: var(--green);
+      background: var(--soft);
+      box-shadow: inset 3px 0 #557d47;
+    }
+
+    .shell {
+      grid-column: 2;
+      min-width: 0;
+      height: 100vh;
+      display: grid;
+      grid-template-rows: 68px minmax(0, 1fr);
+      overflow: hidden;
+    }
+
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 78px;
+      right: 0;
+      z-index: 2;
+      height: 68px;
+      padding: 10px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fffefa;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .eyebrow,
+    .overline {
+      margin: 0;
+      color: #53793e;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .03em;
+    }
+
+    h1,
+    h2,
+    h3 {
+      font-family: Georgia, "Microsoft JhengHei", serif;
+    }
+
+    h1 {
+      margin: 4px 0 0;
+      font-size: 28px;
+    }
+
+    .tools {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .school,
+    .bell {
+      border: 1px solid var(--line);
+      background: #f4f7f0;
+      color: #315e38;
+    }
+
+    .school {
+      padding: 10px 14px;
+      border-radius: 13px;
+      font-weight: 800;
+    }
+
+    .bell,
+    .avatar {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+    }
+
+    .bell {
+      font-size: 19px;
+    }
+
+    .avatar {
+      background: #eff1e9;
+      color: #3f6140;
+      font-weight: 800;
+    }
+
+    .workspace {
+      grid-row: 2;
+      min-height: 0;
+      padding: 18px 28px 18px;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+      gap: 12px;
+      overflow: hidden;
+    }
+
+    .viewport {
+      min-height: 0;
+      overflow: hidden;
+      border-radius: 20px;
+      touch-action: pan-y;
+    }
+
+    .track {
+      height: 100%;
+      display: flex;
+      transition: transform .34s ease;
+    }
+
+    .panel {
+      flex: 0 0 100%;
+      height: 100%;
+      min-width: 0;
+      overflow: hidden;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--paper);
+    }
+
+    .panel-head {
+      height: 49px;
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .panel-head h3 {
+      margin: 4px 0 0;
+      font-size: 23px;
+    }
+
+    .panel-head .action {
+      border: 0;
+      background: transparent;
+      color: #36703b;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .content {
+      height: calc(100% - 49px);
+      min-height: 0;
+    }
+
+    .button {
+      border: 0;
+      border-radius: 9px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .button.primary {
+      color: #fff;
+      background: #2e6538;
+    }
+
+    .button.light {
+      color: #285d32;
+      background: var(--soft);
+      border: 1px solid #cadfc1;
+    }
+
+    .focus-layout {
+      display: grid;
+      grid-template-columns: 1.34fr .82fr;
+      gap: 16px;
+    }
+
+    .hero {
+      min-height: 0;
+      padding: 31px;
+      border-radius: 17px;
+      color: white;
+      background: linear-gradient(122deg, #183d22, #2f6739 55%, #4d8b9c);
+    }
+
+    .hero .overline {
+      color: #dcefcf;
+    }
+
+    .hero h3 {
+      margin: 7px 0 10px;
+      font-size: 34px;
+    }
+
+    .hero p {
+      font-size: 15px;
+    }
+
+    .tag {
+      display: inline-block;
+      margin-top: 5px;
+      padding: 5px 9px;
+      border: 1px solid #fff8;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 17px;
+    }
+
+    .hero-actions .primary {
+      color: #183f22;
+      background: #fff;
+    }
+
+    .hero-actions .outline {
+      border: 1px solid #fff9;
+      color: #fff;
+      background: transparent;
+    }
+
+    .insight {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 25px;
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background: #fbfcf8;
+    }
+
+    .insight strong {
+      margin: 12px 0 8px;
+      font: 700 22px Georgia, "Microsoft JhengHei", serif;
+    }
+
+    .insight p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.75;
+    }
+
+    .assessment-layout {
+      display: grid;
+      grid-template-columns: 1.08fr .92fr;
+      gap: 16px;
+    }
+
+    .stack {
+      display: grid;
+      gap: 11px;
+    }
+
+    .task-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: #fcfcf9;
+    }
+
+    .task-card strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .task-card small {
+      color: var(--muted);
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 99px;
+      color: #8a6724;
+      background: #fff3d3;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .deadline {
+      padding: 22px;
+      border-radius: 15px;
+      background: #fff7e3;
+    }
+
+    .deadline h4 {
+      margin: 9px 0;
+      font-size: 19px;
+    }
+
+    .deadline p {
+      color: #766c53;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .deadline .button {
+      margin-top: 10px;
+      background: #fff;
+      color: #6b541c;
+    }
+
+    .knowledge-layout {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+
+    .knowledge-card {
+      position: relative;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: #fbfcf9;
+      overflow: hidden;
+    }
+
+    .knowledge-card::after {
+      content: "";
+      position: absolute;
+      right: -21px;
+      bottom: -30px;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: #e5f0de;
+    }
+
+    .knowledge-card h4 {
+      position: relative;
+      z-index: 1;
+      margin: 10px 0 12px;
+      font: 700 20px Georgia, "Microsoft JhengHei", serif;
+    }
+
+    .knowledge-card p {
+      position: relative;
+      z-index: 1;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 13px;
+    }
+
+    .knowledge-card b {
+      position: relative;
+      z-index: 1;
+      color: #32633a;
+      font-size: 25px;
+    }
+
+    .progress {
+      position: relative;
+      z-index: 1;
+      height: 8px;
+      margin-top: 14px;
+      border-radius: 10px;
+      background: #e6ece2;
+    }
+
+    .progress i {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: #638e56;
+    }
+
+    .messages-layout {
+      display: grid;
+      grid-template-columns: 1fr .78fr;
+      gap: 18px;
+    }
+
+    .message-list {
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      padding: 0 18px;
+    }
+
+    .message {
+      display: grid;
+      grid-template-columns: 45px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      padding: 17px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .message:last-child {
+      border-bottom: 0;
+    }
+
+    .author {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #f3dc8e;
+      color: #785f1e;
+      font-weight: 800;
+    }
+
+    .message strong,
+    .message small {
+      display: block;
+    }
+
+    .message small {
+      margin-top: 5px;
+      color: var(--muted);
+    }
+
+    .unread {
+      color: var(--amber);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .notice {
+      padding: 24px;
+      border-radius: 15px;
+      color: white;
+      background: linear-gradient(145deg, #325f38, #1e4a29);
+    }
+
+    .notice h4 {
+      margin: 12px 0;
+      font: 700 23px Georgia, "Microsoft JhengHei", serif;
+    }
+
+    .notice p {
+      line-height: 1.8;
+      color: #d9ead6;
+      font-size: 14px;
+    }
+
+    .notice button {
+      margin-top: 10px;
+      color: #264d2d;
+      background: white;
+    }
+
+    .steps-layout {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 17px;
+    }
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .stat {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: #fafbf7;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .stat b {
+      display: block;
+      margin: 10px 0 4px;
+      color: #2c5d34;
+      font: 700 26px Georgia, "Microsoft JhengHei", serif;
+    }
+
+    .stat small {
+      color: #788379;
+      font-size: 11px;
+    }
+
+    .step-detail {
+      display: grid;
+      place-items: center;
+      border: 1px dashed #cfdcc8;
+      border-radius: 15px;
+      background: #fcfdfb;
+      color: #60735f;
+      text-align: center;
+    }
+
+    .step-detail strong {
+      display: block;
+      margin-bottom: 7px;
+      color: #375e39;
+      font-size: 18px;
+    }
+
+    .review-layout {
+      display: grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap: 16px;
+    }
+
+    .review-list {
+      display: grid;
+      gap: 11px;
+    }
+
+    .review {
+      display: grid;
+      grid-template-columns: 45px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 13px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: #fcfcfa;
+    }
+
+    .review-number {
+      width: 43px;
+      height: 43px;
+      display: grid;
+      place-items: center;
+      border-radius: 11px;
+      background: #fff0df;
+      color: #a46129;
+      font-weight: 800;
+    }
+
+    .review p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .review-side {
+      padding: 22px;
+      border-radius: 15px;
+      background: #f1f6ed;
+    }
+
+    .review-side h4 {
+      margin: 10px 0;
+      font-size: 20px;
+    }
+
+    .review-side p {
+      color: #637564;
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .ability-layout {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 18px;
+    }
+
+    .chart-box,
+    .ability-summary {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fcfdf9;
+    }
+
+    .bars {
+      height: calc(100% - 45px);
+      min-height: 175px;
+      display: flex;
+      align-items: end;
+      justify-content: space-around;
+      gap: 25px;
+      padding: 22px 26px 0;
+      background: repeating-linear-gradient(to bottom, transparent 0 41px, #edf1e9 42px);
+    }
+
+    .bar-wrap {
+      height: 100%;
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      justify-content: end;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+      font-size: 12px;
+    }
+
+    .bar {
+      width: min(54px, 70%);
+      border-radius: 8px 8px 2px 2px;
+      background: linear-gradient(#6b985d, #376d3e);
+    }
+
+    .ability-summary {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .ability-summary h4 {
+      margin: 10px 0;
+      font-size: 22px;
+    }
+
+    .ability-summary p {
+      color: var(--muted);
+      line-height: 1.75;
+    }
+
+    .legend {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .legend div {
+      padding: 10px;
+      border-radius: 9px;
+      background: #f1f6ed;
+      color: #416541;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .feature-nav {
+      display: flex;
+      justify-content: center;
+      gap: 9px;
+    }
+
+    .feature-card {
+      flex: 0 0 64px;
+      width: 58px;
+      height: 58px;
+      padding: 7px 8px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: #617060;
+      background: #fff;
+      text-align: left;
+      transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+    }
+
+    .feature-card:hover,
+    .feature-card:focus-visible {
+      border-color: #93ae88;
+      color: var(--green);
+      background: #f7faf4;
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    .feature-card.active {
+      border-color: #5f8a56;
+      color: var(--deep);
+      background: var(--soft);
+      box-shadow: inset 0 0 0 1px #c8dec0;
+    }
+
+    .feature-icon,
+    .feature-label {
+      display: block;
+    }
+
+    .feature-icon {
+      margin-bottom: 4px;
+      color: #4d7945;
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .feature-label {
+      overflow: hidden;
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.2;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    @media (max-width:1150px) {
+      .topbar {
+        padding-inline: 24px;
+      }
+
+      .workspace {
+        padding-inline: 24px;
+      }
+
+
+      .hero {
+        padding: 23px;
+      }
+
+      .knowledge-card {
+        padding: 16px;
+      }
+
+      .panel {
+        padding: 18px;
+      }
+    }
   </style>
 </head>
+
 <body>
-  <div class="app"><aside class="sidebar"><div class="brand">M</div><nav class="nav" aria-label="主導覽"><button class="active"><span>⌂</span>主頁</button><button><span>▤</span>評鑑</button><button><span>◴</span>學習歷程</button><button><span>◌</span>訊息</button><button><span>♙</span>我的帳號</button></nav></aside>
-    <div class="shell"><header class="topbar"><div><p class="eyebrow">Derekknight，今天從這裡開始。</p><h1>今日學習主頁</h1></div><div class="tools"><button class="school">⌂ 中和群⌄</button><button class="bell" aria-label="通知">♧</button><div class="avatar">De</div></div></header>
-      <main class="workspace"><div class="screen-heading"><div><p class="overline" id="pageOverline">今日焦點</p><h2 id="pageTitle">優先完成的學習</h2></div><div class="switcher"><span class="counter" id="counter">1 / 7</span><button class="arrow" id="prev" aria-label="上一項功能">‹</button><button class="arrow" id="next" aria-label="下一項功能">›</button></div></div>
-        <section class="viewport" id="viewport" aria-label="功能輪播"><div class="track" id="track">
-          <article class="panel" data-title="優先完成的學習" data-overline="今日焦點"><div class="panel-head"><div><p class="overline">今日焦點</p><h3>優先完成的學習</h3></div><button class="action">查看全部</button></div><div class="content focus-layout"><section class="hero"><p class="overline">評鑑任務</p><h3>V2 測試試卷</h3><p>實數系、圓的一般式 第 3 章・繼續評鑑</p><span class="tag">3 題</span><div class="hero-actions"><button class="button primary">開始作答</button><button class="button outline">查看課程大綱</button></div></section><section class="insight"><p class="overline">至少 4 個已評步驟</p><strong>需要加強的知識點</strong><p>目前只有待判步驟；完成判定後，這裡會整理最需要複習的重點。</p></section></div></article>
-          <article class="panel" data-title="今日重點與評鑑" data-overline="評鑑任務"><div class="panel-head"><div><p class="overline">依截止時間</p><h3>今日重點與評鑑</h3></div><button class="action">全部評鑑</button></div><div class="content assessment-layout"><section class="stack"><div class="task-card"><div><span class="pill">作答中</span><strong>測試 1 試卷</strong><small>隨機變數的期望值、變異數與標準差・2 題</small></div><button class="button light">繼續作答</button></div><div class="task-card"><div><span class="pill">待作答</span><strong>測試 1 試卷</strong><small>實數系與圓的一般式・2 題</small></div><button class="button light">開始作答</button></div><div class="task-card"><div><span class="pill">待老師批閱</span><strong>第四單元評鑑藥卷</strong><small>立體幾何、向量與座標・17 題</small></div><button class="button light">查看詳情</button></div></section><aside class="deadline"><p class="overline">下一個截止時間</p><h4>10 月 31 日 23:59</h4><p>完成本週指定評鑑，即可更新你的能力定位與學習建議。</p><button class="button">查看行程</button></aside></div></article>
-          <article class="panel" data-title="知識點加強" data-overline="學習建議"><div class="panel-head"><div><p class="overline">依作答表現</p><h3>知識點加強</h3></div><button class="action">查看完整建議</button></div><div class="content knowledge-layout"><section class="knowledge-card"><p class="overline">優先複習</p><h4>隨機變數的期望值</h4><b>待判定</b><p>完成 2 題相關評鑑後，系統將建立你的掌握度。</p><div class="progress"><i style="width:36%"></i></div></section><section class="knowledge-card"><p class="overline">持續練習</p><h4>圓的一般式</h4><b>68%</b><p>建議再完成 3 個步驟，強化公式轉換與判讀。</p><div class="progress"><i style="width:68%"></i></div></section><section class="knowledge-card"><p class="overline">表現穩定</p><h4>實數系</h4><b>84%</b><p>目前掌握度良好，可進一步挑戰綜合題型。</p><div class="progress"><i style="width:84%"></i></div></section></div></article>
-          <article class="panel" data-title="老師訊息" data-overline="最近 2 則"><div class="panel-head"><div><p class="overline">最近 2 則</p><h3>老師訊息</h3></div><button class="action">前往訊息中心</button></div><div class="content messages-layout"><section class="message-list"><div class="message"><div class="author">老</div><div><span class="unread">老師・未讀</span><strong>v2test-10-0-4</strong><small>評鑑時間：2026/10/01 ～ 2026/10/31</small></div><button class="button light">查看</button></div><div class="message"><div class="author">老</div><div><span class="unread">老師・未讀</span><strong>v2test-10-01-3</strong><small>評鑑時間：2026/10/01 ～ 2026/10/31</small></div><button class="button light">查看</button></div></section><aside class="notice"><p class="overline" style="color:#dcefcf">訊息提醒</p><h4>有 7 則未讀訊息</h4><p>老師的批閱回覆與新的學習建議會集中顯示在這裡。</p><button class="button">查看全部訊息</button></aside></div></article>
-          <article class="panel" data-title="我的解題步驟" data-overline="步驟統計"><div class="panel-head"><div><p class="overline">依老師解答的每一步統計</p><h3>我的解題步驟</h3></div><button class="action">近 14 天⌄</button></div><div class="content steps-layout"><section class="stat-row"><div class="stat"><span>通過率</span><b>尚無判定</b><small>0 / 0 個已評步驟</small></div><div class="stat"><span>未通過</span><b>0 步</b><small>涉及 0 題次</small></div><div class="stat"><span>待判</span><b>6 步</b><small>不算進通過率</small></div><div class="stat"><span>累積已評步驟</span><b>0 步</b><small>目前學校全部期間</small></div></section><section class="step-detail"><div><strong>等待老師批閱</strong><span>完成判定後，這裡會顯示每個解題步驟的表現與建議。</span></div></section></div></article>
-          <article class="panel" data-title="錯題與複習" data-overline="複習佇列"><div class="panel-head"><div><p class="overline">複習佇列</p><h3>錯題與複習</h3></div><button class="action">設定複習提醒</button></div><div class="content review-layout"><section class="review-list"><div class="review"><div class="review-number">01</div><div><strong>圓的一般式：判斷圓心與半徑</strong><p>上次作答：今天・建議重新檢視配方法</p></div><button class="button light">開始複習</button></div><div class="review"><div class="review-number">02</div><div><strong>期望值的基本運算</strong><p>上次作答：3 天前・建議完成範例題</p></div><button class="button light">開始複習</button></div></section><aside class="review-side"><p class="overline">本週目標</p><h4>完成 2 題複習</h4><p>完成後系統會依表現調整後續的複習順序。</p><button class="button primary">開始本週複習</button></aside></div></article>
-          <article class="panel" data-title="能力定位" data-overline="能力統計"><div class="panel-head"><div><p class="overline">能力統計</p><h3>能力定位</h3></div><button class="action">查看未通過明細</button></div><div class="content ability-layout"><section class="chart-box"><p class="overline">近 14 天作答表現</p><div class="bars"><div class="bar-wrap"><div class="bar" style="height:60%"></div><span>邏輯結構</span></div><div class="bar-wrap"><div class="bar" style="height:72%"></div><span>計算能力</span></div><div class="bar-wrap"><div class="bar" style="height:54%"></div><span>完成時間</span></div></div></section><aside class="ability-summary"><p class="overline">目前概況</p><h4>持續累積作答資料</h4><p>完成評鑑並取得老師判定後，能力圖將反映各項能力的近期趨勢。</p><div class="legend"><div>● 邏輯結構：資料累積中</div><div>● 計算能力：資料累積中</div><div>● 完成時間：資料累積中</div></div></aside></div></article>
-        </div></section><div class="dots" id="dots" aria-label="功能頁面切換"></div>
-      </main></div></div>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">M</div>
+      <nav class="nav" aria-label="主導覽"><button
+          class="active"><span>⌂</span>主頁</button><button><span>▤</span>評鑑</button><button><span>◴</span>學習歷程</button><button><span>◌</span>訊息</button><button><span>♙</span>我的帳號</button>
+      </nav>
+    </aside>
+    <div class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Derekknight，今天從這裡開始。</p>
+        </div>
+        <div class="tools"><button class="school">⌂ 中和群⌄</button><button class="bell" aria-label="通知">♧</button>
+          <div class="avatar">De</div>
+        </div>
+      </header>
+      <main class="workspace">
+        <section class="viewport" id="viewport" aria-label="功能輪播">
+          <div class="track" id="track">
+            <article class="panel" data-title="優先完成的學習" data-overline="今日焦點">
+              <div class="panel-head">
+                <div>
+                  <p class="overline">今日焦點</p>
+                  <h3>優先完成的學習</h3>
+                </div><button class="action">查看全部</button>
+              </div>
+              <div class="content focus-layout">
+                <section class="hero">
+                  <p class="overline">評鑑任務</p>
+                  <h3>V2 測試試卷</h3>
+                  <p>實數系、圓的一般式 第 3 章・繼續評鑑</p><span class="tag">3 題</span>
+                  <div class="hero-actions"><button class="button primary">開始作答</button><button
+                      class="button outline">查看課程大綱</button></div>
+                </section>
+                <section class="insight">
+                  <p class="overline">至少 4 個已評步驟</p><strong>需要加強的知識點</strong>
+                  <p>目前只有待判步驟；完成判定後，這裡會整理最需要複習的重點。</p>
+                </section>
+              </div>
+            </article>
+            <article class="panel" data-title="今日重點與評鑑" data-overline="評鑑任務">
+              <div class="panel-head">
+                <div>
+                  <p class="overline">依截止時間</p>
+                  <h3>今日重點與評鑑</h3>
+                </div><button class="action">全部評鑑</button>
+              </div>
+              <div class="content assessment-layout">
+                <section class="stack">
+                  <div class="task-card">
+                    <div><span class="pill">作答中</span><strong>測試 1 試卷</strong><small>隨機變數的期望值、變異數與標準差・2 題</small></div>
+                    <button class="button light">繼續作答</button>
+                  </div>
+                  <div class="task-card">
+                    <div><span class="pill">待作答</span><strong>測試 1 試卷</strong><small>實數系與圓的一般式・2 題</small></div><button
+                      class="button light">開始作答</button>
+                  </div>
+                  <div class="task-card">
+                    <div><span class="pill">待老師批閱</span><strong>第四單元評鑑藥卷</strong><small>立體幾何、向量與座標・17 題</small></div>
+                    <button class="button light">查看詳情</button>
+                  </div>
+                </section>
+                <aside class="deadline">
+                  <p class="overline">下一個截止時間</p>
+                  <h4>10 月 31 日 23:59</h4>
+                  <p>完成本週指定評鑑，即可更新你的能力定位與學習建議。</p><button class="button">查看行程</button>
+                </aside>
+              </div>
+            </article>
+            <article class="panel" data-title="知識點加強" data-overline="學習建議">
+              <div class="panel-head">
+                <div>
+                  <p class="overline">依作答表現</p>
+                  <h3>知識點加強</h3>
+                </div><button class="action">查看完整建議</button>
+              </div>
+              <div class="content knowledge-layout">
+                <section class="knowledge-card">
+                  <p class="overline">優先複習</p>
+                  <h4>隨機變數的期望值</h4><b>待判定</b>
+                  <p>完成 2 題相關評鑑後，系統將建立你的掌握度。</p>
+                  <div class="progress"><i style="width:36%"></i></div>
+                </section>
+                <section class="knowledge-card">
+                  <p class="overline">持續練習</p>
+                  <h4>圓的一般式</h4><b>68%</b>
+                  <p>建議再完成 3 個步驟，強化公式轉換與判讀。</p>
+                  <div class="progress"><i style="width:68%"></i></div>
+                </section>
+                <section class="knowledge-card">
+                  <p class="overline">表現穩定</p>
+                  <h4>實數系</h4><b>84%</b>
+                  <p>目前掌握度良好，可進一步挑戰綜合題型。</p>
+                  <div class="progress"><i style="width:84%"></i></div>
+                </section>
+              </div>
+            </article>
+            <article class="panel" data-title="老師訊息" data-overline="最近 2 則">
+              <div class="panel-head">
+                <div>
+                  <p class="overline">最近 2 則</p>
+                  <h3>老師訊息</h3>
+                </div><button class="action">前往訊息中心</button>
+              </div>
+              <div class="content messages-layout">
+                <section class="message-list">
+                  <div class="message">
+                    <div class="author">老</div>
+                    <div><span class="unread">老師・未讀</span><strong>v2test-10-0-4</strong><small>評鑑時間：2026/10/01 ～
+                        2026/10/31</small></div><button class="button light">查看</button>
+                  </div>
+                  <div class="message">
+                    <div class="author">老</div>
+                    <div><span class="unread">老師・未讀</span><strong>v2test-10-01-3</strong><small>評鑑時間：2026/10/01 ～
+                        2026/10/31</small></div><button class="button light">查看</button>
+                  </div>
+                </section>
+                <aside class="notice">
+                  <p class="overline" style="color:#dcefcf">訊息提醒</p>
+                  <h4>有 7 則未讀訊息</h4>
+                  <p>老師的批閱回覆與新的學習建議會集中顯示在這裡。</p><button class="button">查看全部訊息</button>
+                </aside>
+              </div>
+            </article>
+            <article class="panel" data-title="我的解題步驟" data-overline="步驟統計">
+              <div class="panel-head">
+                <div>
+                  <p class="overline">依老師解答的每一步統計</p>
+                  <h3>我的解題步驟</h3>
+                </div><button class="action">近 14 天⌄</button>
+              </div>
+              <div class="content steps-layout">
+                <section class="stat-row">
+                  <div class="stat"><span>通過率</span><b>尚無判定</b><small>0 / 0 個已評步驟</small></div>
+                  <div class="stat"><span>未通過</span><b>0 步</b><small>涉及 0 題次</small></div>
+                  <div class="stat"><span>待判</span><b>6 步</b><small>不算進通過率</small></div>
+                  <div class="stat"><span>累積已評步驟</span><b>0 步</b><small>目前學校全部期間</small></div>
+                </section>
+                <section class="step-detail">
+                  <div><strong>等待老師批閱</strong><span>完成判定後，這裡會顯示每個解題步驟的表現與建議。</span></div>
+                </section>
+              </div>
+            </article>
+            <article class="panel" data-title="錯題與複習" data-overline="複習佇列">
+              <div class="panel-head">
+                <div>
+                  <p class="overline">複習佇列</p>
+                  <h3>錯題與複習</h3>
+                </div><button class="action">設定複習提醒</button>
+              </div>
+              <div class="content review-layout">
+                <section class="review-list">
+                  <div class="review">
+                    <div class="review-number">01</div>
+                    <div><strong>圓的一般式：判斷圓心與半徑</strong>
+                      <p>上次作答：今天・建議重新檢視配方法</p>
+                    </div><button class="button light">開始複習</button>
+                  </div>
+                  <div class="review">
+                    <div class="review-number">02</div>
+                    <div><strong>期望值的基本運算</strong>
+                      <p>上次作答：3 天前・建議完成範例題</p>
+                    </div><button class="button light">開始複習</button>
+                  </div>
+                </section>
+                <aside class="review-side">
+                  <p class="overline">本週目標</p>
+                  <h4>完成 2 題複習</h4>
+                  <p>完成後系統會依表現調整後續的複習順序。</p><button class="button primary">開始本週複習</button>
+                </aside>
+              </div>
+            </article>
+            <article class="panel" data-title="能力定位" data-overline="能力統計">
+              <div class="panel-head">
+                <div>
+                  <p class="overline">能力統計</p>
+                  <h3>能力定位</h3>
+                </div><button class="action">查看未通過明細</button>
+              </div>
+              <div class="content ability-layout">
+                <section class="chart-box">
+                  <p class="overline">近 14 天作答表現</p>
+                  <div class="bars">
+                    <div class="bar-wrap">
+                      <div class="bar" style="height:60%"></div><span>邏輯結構</span>
+                    </div>
+                    <div class="bar-wrap">
+                      <div class="bar" style="height:72%"></div><span>計算能力</span>
+                    </div>
+                    <div class="bar-wrap">
+                      <div class="bar" style="height:54%"></div><span>完成時間</span>
+                    </div>
+                  </div>
+                </section>
+                <aside class="ability-summary">
+                  <p class="overline">目前概況</p>
+                  <h4>持續累積作答資料</h4>
+                  <p>完成評鑑並取得老師判定後，能力圖將反映各項能力的近期趨勢。</p>
+                  <div class="legend">
+                    <div>● 邏輯結構：資料累積中</div>
+                    <div>● 計算能力：資料累積中</div>
+                    <div>● 完成時間：資料累積中</div>
+                  </div>
+                </aside>
+              </div>
+            </article>
+          </div>
+        </section>
+        <nav class="feature-nav" id="featureNav" aria-label="功能快捷切換"></nav>
+      </main>
+    </div>
+  </div>
   <script>
-    const track=document.querySelector('#track'), panels=[...document.querySelectorAll('.panel')], dots=document.querySelector('#dots');
-    const title=document.querySelector('#pageTitle'), overline=document.querySelector('#pageOverline'), counter=document.querySelector('#counter'), viewport=document.querySelector('#viewport');
-    let current=0,startX=0;
-    panels.forEach((panel,index)=>{const dot=document.createElement('button');dot.className='dot';dot.setAttribute('aria-label',`切換至${panel.dataset.title}`);dot.onclick=()=>show(index);dots.append(dot);});
-    function show(index){current=(index+panels.length)%panels.length;track.style.transform=`translateX(-${current*100}%)`;title.textContent=panels[current].dataset.title;overline.textContent=panels[current].dataset.overline;counter.textContent=`${current+1} / ${panels.length}`;[...dots.children].forEach((dot,i)=>dot.classList.toggle('active',i===current));}
-    document.querySelector('#prev').onclick=()=>show(current-1);document.querySelector('#next').onclick=()=>show(current+1);
-    viewport.addEventListener('pointerdown',event=>startX=event.clientX);viewport.addEventListener('pointerup',event=>{if(Math.abs(event.clientX-startX)>55)show(current+(event.clientX<startX?1:-1));});
-    document.addEventListener('keydown',event=>{if(event.key==='ArrowRight')show(current+1);if(event.key==='ArrowLeft')show(current-1);});show(0);
+    const track = document.querySelector('#track'), sourcePanels = [...document.querySelectorAll('.panel')], featureNav = document.querySelector('#featureNav'), viewport = document.querySelector('#viewport');
+    const panels = [sourcePanels[0], sourcePanels[1], sourcePanels[6], sourcePanels[2], sourcePanels[4], sourcePanels[5], sourcePanels[3]];
+    panels.forEach(panel => track.append(panel));
+    const featureCards = [
+      ['⌂', '學習總覽'], ['✓', '評量任務'], ['▥', '能力分析'], ['▦', '知識地圖'],
+      ['↗', '學習歷程'], ['↻', '複習建議'], ['✉', '訊息通知']
+    ];
+    let current = 0, startX = 0;
+    panels.forEach((panel, index) => {
+      const card = document.createElement('button');
+      const [icon, label] = featureCards[index];
+      card.type = 'button';
+      card.className = 'feature-card';
+      card.setAttribute('aria-label', `前往${label}`);
+      card.innerHTML = `<span class="feature-icon" aria-hidden="true">${icon}</span><span class="feature-label">${label}</span>`;
+      card.onclick = () => show(index);
+      featureNav.append(card);
+    });
+    function show(index) { current = (index + panels.length) % panels.length; track.style.transform = `translateX(-${current * 100}%)`; [...featureNav.children].forEach((card, i) => card.classList.toggle('active', i === current)); }
+    viewport.addEventListener('pointerdown', event => startX = event.clientX); viewport.addEventListener('pointerup', event => { if (Math.abs(event.clientX - startX) > 55) show(current + (event.clientX < startX ? 1 : -1)); });
+    document.addEventListener('keydown', event => { if (event.key === 'ArrowRight') show(current + 1); if (event.key === 'ArrowLeft') show(current - 1); }); show(0);
   </script>
 </body>
+
 </html>
