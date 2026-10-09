@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任務進度管理</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #f7f9fc;
+            --panel: rgba(255, 255, 255, .94);
+            --line: #d8dee8;
+            --text: #263238;
+            --muted: #78828d;
+            --accent: #4f7cff;
+            --accent-soft: #edf2ff;
+            --done: #45b98a;
+            --done-soft: #edf9f4;
+            --shadow: 0 8px 25px rgba(45, 61, 80, .10);
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--text);
+            font-family: "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif;
+            background:
+                linear-gradient(rgba(100, 120, 140, .055) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(100, 120, 140, .055) 1px, transparent 1px),
+                var(--bg);
+            background-size: 24px 24px;
+            overflow: hidden;
+        }
+
+        .app {
+            width: min(1180px, 100%);
+            height: 100vh;
+            margin: auto;
+            padding: 22px 28px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .title h1 {
+            margin: 0;
+            font-size: 25px;
+            letter-spacing: .04em;
+        }
+
+        .title p {
+            margin: 5px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .summary {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+        }
+
+        .progress {
+            flex: 1;
+            height: 10px;
+            background: #e8ecf2;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .progress>div {
+            width: 42%;
+            height: 100%;
+            background: var(--accent);
+            border-radius: inherit;
+            transition: width .3s ease;
+        }
+
+        .percent {
+            font-size: 14px;
+            font-weight: 700;
+            min-width: 42px;
+            text-align: right;
+        }
+
+        .board {
+            flex: 1;
+            min-height: 0;
+            display: grid;
+            /* 完成區維持原本約 60% 的比例，移出的申訴區空間交給資訊區。 */
+            grid-template-columns: 3fr 2fr;
+            gap: 22px;
+        }
+
+        .bottom-row {
+            flex: 0 0 250px;
+            min-height: 0;
+            display: grid;
+            /* 申訴區約占下方列 40%，其餘空間保留給任務卡。 */
+            grid-template-columns: 4fr minmax(0, 6fr);
+            gap: 22px;
+        }
+
+        .bottom-row .appeal-zone {
+            min-height: 0;
+            height: 250px;
+        }
+
+        .bottom-row .task-list-panel {
+            min-width: 0;
+            height: 250px;
+        }
+
+        .zone {
+            position: relative;
+            min-height: 250px;
+            border: 2px dashed #aeb8c6;
+            border-radius: 3px;
+            padding: 25px;
+            background: rgba(255, 255, 255, .45);
+            transition: .2s;
+        }
+
+        .zone.drag-over {
+            background: rgba(79, 124, 255, .08);
+            border-color: var(--accent);
+        }
+
+        .info-zone {
+            position: relative;
+            min-height: 250px;
+            padding: 25px 12px 12px;
+            box-sizing: border-box;
+            border: 1px solid #d8dee5;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, .55);
+            overflow: visible;
+        }
+
+        .info-content {
+            min-height: 190px;
+            height: auto;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            box-sizing: border-box;
+            overflow: visible;
+        }
+
+        .info-empty {
+            color: #9aa3ad;
+            font-size: 13px;
+            line-height: 1.8;
+            text-align: center;
+        }
+
+        .info-card {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 14px 12px;
+            border-radius: 8px;
+            background: #fff;
+            border: 1px solid #dce2e8;
+            box-shadow: 0 5px 16px rgba(40, 55, 70, .08);
+            overflow: visible;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
+        .info-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #334;
+            line-height: 1.4;
+            margin-bottom: 9px;
+        }
+
+        .info-detail {
+            font-size: 13px;
+            color: #66717c;
+            line-height: 1.7;
+            margin-bottom: 10px;
+            white-space: normal;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
+        .info-progress {
+            font-size: 12px;
+            color: #7a858f;
+            padding-top: 8px;
+            border-top: 1px solid #edf0f3;
+        }
+
+        .info-status {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 3px 7px;
+            border-radius: 10px;
+            background: #eef2f5;
+            color: #65717b;
+            font-size: 11px;
+        }
+
+        .info-status.completed {
+            background: #e5f4e8;
+            color: #43804e;
+        }
+
+        .info-status.appeal {
+            background: #fff0df;
+            color: #9a6a28;
+        }
+
+        .info-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid #edf0f3;
+        }
+
+        .info-actions button {
+            padding: 7px 10px;
+            border: 1px solid #ccd5df;
+            border-radius: 6px;
+            background: #fff;
+            color: #4a5866;
+            font-size: 12px;
+        }
+
+        .info-actions .info-action-primary {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .zone-header {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--bg);
+            padding: 0 14px;
+            font-weight: 700;
+            font-size: 15px;
+            white-space: nowrap;
+        }
+
+        .zone.completed .zone-header {
+            color: var(--done);
+        }
+
+        .zone.executing .zone-header {
+            color: var(--accent);
+        }
+
+        /* 上方任務區：卡片直放（portrait），依區域採不同堆疊方式 */
+        .zone-content {
+            height: 100%;
+            min-height: 190px;
+            position: relative;
+            padding-top: 8px;
+        }
+
+        /* 完成區：左右方向錯位堆疊 */
+        .zone.completed .zone-content .task {
+            position: absolute;
+            left: 50%;
+            top: 8px;
+            width: 132px;
+            min-height: 182px;
+
+            /* 所有卡片同高，僅水平向同一方向偏移 */
+            transform:
+                translateX(calc(-50% + var(--stack-x, 0px)));
+
+            /* 固定層級，不因 hover 改變，避免遮住下方卡片 */
+            z-index: calc(100 - var(--stack-index, 0));
+
+            /* 提升本身繪製層級，但不改 z-index */
+            transition: transform .18s ease, box-shadow .18s ease;
+        }
+
+
+        .completed-zone {
+            position: relative;
+        }
+
+        /* 完成區翻頁動畫 */
+        .completed-zone.page-animating .zone-content,
+        .appeal-zone.page-animating .zone-content {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+
+        .completed-zone .zone-content,
+        .appeal-zone .zone-content {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity .18s ease, transform .18s ease;
+        }
+
+        .completed-nav,
+        .appeal-nav {
+            position: absolute;
+            left: 10px;
+            right: 10px;
+            bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
+            z-index: 300;
+        }
+
+        .completed-nav button,
+        .appeal-nav button {
+            pointer-events: auto;
+            width: 38px;
+            height: 38px;
+            padding: 0;
+            border: 1px solid #d5dce3;
+            border-radius: 7px;
+            background: rgba(255, 255, 255, .96);
+            color: #68737d;
+            cursor: pointer;
+            box-shadow: 0 3px 8px rgba(40, 55, 70, .10);
+            font-size: 20px;
+            line-height: 1;
+        }
+
+        .completed-nav button:hover:not(:disabled),
+        .appeal-nav button:hover:not(:disabled) {
+            background: #f5f7f9;
+            color: #334;
+            transform: scale(1.06);
+        }
+
+        .completed-nav button:active:not(:disabled),
+        .appeal-nav button:active:not(:disabled) {
+            transform: scale(.92);
+        }
+
+        .completed-nav button,
+        .appeal-nav button {
+            transition: transform .12s ease, background .15s ease, color .15s ease, opacity .15s ease;
+        }
+
+        .completed-nav button:disabled,
+        .appeal-nav button:disabled {
+            opacity: .35;
+            cursor: default;
+        }
+
+        .completed-page,
+        .appeal-page {
+            position: absolute;
+            left: 50%;
+            bottom: 11px;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: #8a949d;
+            pointer-events: none;
+        }
+
+        .zone.completed .zone-content .task:hover {
+            /* 游標所在卡片向上移 */
+            transform:
+                translateX(calc(-50% + var(--stack-x, 0px))) translateY(-12px);
+
+            /* 不設定 z-index: 200，避免下方卡片無法點擊 */
+            box-shadow: 0 10px 22px rgba(40, 55, 70, .16);
+        }
+
+        /* 申訴區：與完成區相同，依時間由左至右排列。 */
+        .zone.executing .zone-content .task {
+            position: absolute;
+            left: 50%;
+            top: 8px;
+            width: 132px;
+            min-height: 182px;
+            transform:
+                translateX(calc(-50% + var(--stack-x, 0px)));
+            z-index: calc(100 - var(--stack-index, 0));
+        }
+
+        .zone.executing .zone-content .task:hover {
+            transform:
+                translateX(calc(-50% + var(--stack-x, 0px))) translateY(-12px);
+        }
+
+        .zone-content .task.dragging {
+            opacity: .5;
+        }
+
+        /* 完成區拖曳時仍保留原本牌組層級 */
+        .zone.completed .zone-content .task.dragging {
+            transform:
+                translateX(calc(-50% + var(--stack-x, 0px))) translateY(-12px) scale(.97);
+        }
+
+        .empty {
+            width: 100%;
+            height: 100%;
+            min-height: 190px;
+            display: grid;
+            place-items: center;
+            color: #a2aab4;
+            font-size: 13px;
+            pointer-events: none;
+        }
+
+        .task {
+            width: 132px;
+            min-height: 182px;
+            background: var(--panel);
+            border: 1px solid #aeb7c2;
+            border-radius: 5px;
+            box-shadow: 0 4px 12px rgba(40, 55, 70, .07);
+            padding: 13px;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            transition: transform .18s, box-shadow .18s, border-color .18s;
+        }
+
+        .task:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+            border-color: var(--accent);
+        }
+
+        .task.dragging {
+            opacity: .45;
+            transform: scale(.97);
+        }
+
+        .task.done {
+            border-color: #9fd7c0;
+            background: var(--done-soft);
+        }
+
+        .task-title {
+            font-weight: 700;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 9px;
+        }
+
+        .task-meta {
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .task-progress {
+            height: 5px;
+            background: #e7ebef;
+            border-radius: 99px;
+            overflow: hidden;
+            margin-top: 9px;
+        }
+
+        .task-progress span {
+            display: block;
+            height: 100%;
+            width: 0%;
+            background: var(--accent);
+            transition: width .25s;
+        }
+
+        .task.done .task-progress span {
+            background: var(--done);
+        }
+
+        .check {
+            position: absolute;
+            right: 8px;
+            top: 8px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 1px solid #c6ced8;
+            background: white;
+            display: grid;
+            place-items: center;
+            font-size: 12px;
+            color: transparent;
+        }
+
+        .task.done .check {
+            color: white;
+            border-color: var(--done);
+            background: var(--done);
+        }
+
+        .task-list-panel {
+            background: rgba(255, 255, 255, .88);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 12px 15px 14px;
+        }
+
+        .task-list-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .task-list-head strong {
+            font-size: 14px;
+        }
+
+        .task-list-head span {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .task-strip {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding: 2px 2px 8px;
+            scrollbar-width: thin;
+        }
+
+        .task-strip .task {
+            flex: 0 0 132px;
+            min-height: 182px;
+        }
+
+        .hint {
+            text-align: center;
+            color: #707b86;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        /* Detail dialog */
+        dialog {
+            width: min(460px, calc(100vw - 32px));
+            border: 0;
+            border-radius: 16px;
+            padding: 0;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .22);
+        }
+
+        dialog::backdrop {
+            background: rgba(25, 35, 50, .35);
+        }
+
+        .dialog-body {
+            padding: 24px;
+        }
+
+        .dialog-body h2 {
+            margin: 0 0 5px;
+            font-size: 20px;
+        }
+
+        .dialog-body p {
+            color: var(--muted);
+            line-height: 1.7;
+            font-size: 14px;
+        }
+
+        .dialog-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 18px;
+        }
+
+        button {
+            border: 0;
+            border-radius: 8px;
+            padding: 9px 16px;
+            cursor: pointer;
+            font: inherit;
+        }
+
+        .btn-secondary {
+            background: #edf0f4;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        @media (max-width: 760px) {
+            body {
+                overflow: auto;
+            }
+
+            .app {
+                height: auto;
+                min-height: 100vh;
+                padding: 18px 14px;
+            }
+
+            header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .summary {
+                width: 100%;
+                min-width: 0;
+            }
+
+            .board {
+                grid-template-columns: 1fr;
+            }
+
+            .bottom-row {
+                flex-basis: auto;
+                grid-template-columns: 1fr;
+            }
+
+            .bottom-row .appeal-zone,
+            .bottom-row .task-list-panel {
+                height: auto;
+                min-height: 250px;
+            }
+
+            .zone {
+                min-height: 250px;
+            }
+
+            .task-list-panel {
+                flex-basis: 175px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app">
+        <header>
+            <div class="title">
+                <h1>任務進度管理</h1>
+                <p>任務依預設時間固定排序，點擊卡片查看內容並進行操作</p>
+            </div>
+            <div class="summary">
+                <div class="progress">
+                    <div id="overallProgress"></div>
+                </div>
+                <div class="percent" id="overallPercent">0%</div>
+            </div>
+        </header>
+
+        <main class="board">
+            <section class="zone completed completed-zone" data-zone="completed">
+                <div class="zone-header">完成區（左新右舊）</div>
+                <div class="zone-content" id="completedZone"></div>
+                <div class="completed-nav">
+                    <button type="button" id="completedPrev" title="較新10張">▲</button>
+                    <div class="completed-page" id="completedPage">1 / 1</div>
+                    <button type="button" id="completedNext" title="較舊10張">▼</button>
+                </div>
+            </section>
+
+            <section class="info-zone" id="infoZone">
+                <div class="zone-header">資訊區</div>
+                <div class="info-content" id="infoContent">
+                    <div class="info-empty">將游標移到卡片上<br>查看任務內容</div>
+                </div>
+            </section>
+        </main>
+
+        <div class="bottom-row">
+            <section class="zone executing appeal-zone" data-zone="appeal">
+                <div class="zone-header">申訴區</div>
+                <div class="zone-content" id="executingZone"></div>
+                <div class="appeal-nav">
+                    <button type="button" id="appealPrev" title="較新任務">▲</button>
+                    <div class="appeal-page" id="appealPage">1 / 1</div>
+                    <button type="button" id="appealNext" title="較舊任務">▼</button>
+                </div>
+            </section>
+
+            <section class="task-list-panel">
+                <div class="task-list-head">
+                    <strong>任務卡</strong>
+                    <span>左側較新｜依時間固定排序</span>
+                </div>
+                <div class="task-strip" id="taskStrip"></div>
+                <div class="hint">左側為時間較新的任務；順序固定不可拖曳；已完成任務會從「任務卡」消失；完成區顯示上限會隨寬度調整</div>
+            </section>
+        </div>
+    </div>
+
+    <dialog id="detailDialog">
+        <div class="dialog-body">
+            <h2 id="dialogTitle"></h2>
+            <p id="dialogText"></p>
+            <div class="dialog-actions">
+                <button class="btn-secondary" onclick="detailDialog.close()">關閉</button>
+                <button class="btn-secondary" id="dialogAppeal">提出申訴</button>
+                <button class="btn-primary" id="dialogToggle">標記完成</button>
+            </div>
+        </div>
+    </dialog>
+
+    <script>
+        const tasks = [
+            // createdAt：任務預設時間；所有顯示區皆固定依此時間排序
+            ...Array.from({ length: 25 }, (_, i) => ({
+                id: i + 1,
+                createdAt: `2026-08-${String(1 + i).padStart(2, "0")}T09:00:00`,
+                title: `已完成任務 ${String(i + 1).padStart(2, "0")}`,
+                detail: `這是第 ${i + 1} 個已完成任務，用來測試完成區每頁 10 張卡片的分頁效果。`,
+                progress: 100,
+                status: "completed"
+            })),
+            ...Array.from({ length: 15 }, (_, i) => ({
+                id: i + 26,
+                createdAt: `2026-09-${String(1 + i).padStart(2, "0")}T09:00:00`,
+                title: `待完成任務 ${String(i + 1).padStart(2, "0")}`,
+                detail: `這是第 ${i + 1} 個待完成任務，完成後會移入完成區，並從任務區消失。`,
+                progress: [75, 60, 45, 30, 15][i % 5],
+                status: "available"
+            }))
+        ];
+
+        const completedZone = document.getElementById("completedZone");
+        const executingZone = document.getElementById("executingZone");
+        const infoContent = document.getElementById("infoContent");
+        const taskStrip = document.getElementById("taskStrip");
+        const overallProgress = document.getElementById("overallProgress");
+        const overallPercent = document.getElementById("overallPercent");
+        const detailDialog = document.getElementById("detailDialog");
+        const dialogTitle = document.getElementById("dialogTitle");
+        const dialogText = document.getElementById("dialogText");
+        const dialogToggle = document.getElementById("dialogToggle");
+        const dialogAppeal = document.getElementById("dialogAppeal");
+
+        let activeTaskId = null;
+        let lastInfoTaskId = null;
+        let completedPageIndex = 0;
+        let appealPageIndex = 0;
+        const COMPLETED_PAGE_MAX_SIZE = 10;
+        const COMPLETED_PAGE_MIN_SIZE = 3;
+
+        function getPageSize(zone) {
+            const cardWidth = 132;
+            const minimumVisibleOffset = 42;
+            const horizontalPadding = 48;
+            const zoneWidth = zone.clientWidth || 500;
+            const fitCount = Math.floor(
+                (Math.max(cardWidth, zoneWidth - horizontalPadding) - cardWidth) /
+                minimumVisibleOffset
+            ) + 1;
+
+            return Math.max(
+                COMPLETED_PAGE_MIN_SIZE,
+                Math.min(COMPLETED_PAGE_MAX_SIZE, fitCount)
+            );
+        }
+
+        function getCompletedPageSize() {
+            return getPageSize(completedZone);
+        }
+
+        function getAppealPageSize() {
+            return getPageSize(executingZone);
+        }
+
+        function showTaskInfo(task) {
+            if (!infoContent || !task) return;
+            lastInfoTaskId = task.id;
+
+            const statusText =
+                task.status === "completed" ? "已完成" :
+                    task.status === "appeal" ? "申訴中" : "進行中";
+
+            const action = task.status === "completed"
+                ? '<button type="button" class="info-action-primary" data-info-action="appeal">提出申訴</button>'
+                : task.status === "appeal"
+                    ? '<button type="button" class="info-action-primary" data-info-action="withdraw">撤銷申訴</button>'
+                    : '<button type="button" class="info-action-primary" data-info-action="complete">標記完成</button>';
+
+            infoContent.innerHTML = `
+        <div class="info-card">
+            <div class="info-title">${task.title}</div>
+            <div class="info-detail">${task.detail}</div>
+            <div class="info-progress">完成度：${task.progress}%</div>
+            <div class="info-status ${task.status}">${statusText}</div>
+            <div class="info-actions" data-task-id="${task.id}">
+                <button type="button" data-info-action="detail">查看詳情</button>
+                ${action}
+            </div>
+        </div>
+    `;
+        }
+
+        function clearTaskInfo() {
+            // 資訊區保留最後指向的任務，直到有下一張卡片被指向。
+        }
+
+        function openTaskDialog(task) {
+            if (!task) return;
+            activeTaskId = task.id;
+            dialogTitle.textContent = task.title;
+            dialogText.textContent = task.detail;
+
+            if (task.status === "completed") {
+                dialogToggle.style.display = "none";
+                dialogAppeal.textContent = "提出申訴";
+                dialogAppeal.style.display = "inline-block";
+            } else if (task.status === "appeal") {
+                dialogToggle.style.display = "none";
+                dialogAppeal.textContent = "撤銷申訴";
+                dialogAppeal.style.display = "inline-block";
+            } else {
+                dialogToggle.textContent = "標記完成";
+                dialogToggle.style.display = "inline-block";
+                dialogAppeal.style.display = "none";
+            }
+
+            detailDialog.showModal();
+        }
+
+        function taskCard(task, source = "board") {
+            const el = document.createElement("article");
+            el.className = "task" + (task.status === "completed" ? " done" : "");
+            el.draggable = false;
+            el.dataset.id = task.id;
+
+            el.innerHTML = `
+        <div class="check">✓</div>
+        <div class="task-title">${task.title}</div>
+        <div class="task-meta">${task.status === "completed" ? "已完成" : task.status === "appeal" ? "申訴中" : `完成度 ${task.progress}%`}</div>
+        <div class="task-progress"><span style="width:${task.progress}%"></span></div>
+    `;
+
+            el.addEventListener("mouseenter", () => showTaskInfo(task));
+
+            el.addEventListener("dblclick", e => {
+                if (el.classList.contains("dragging")) return;
+                openTaskDialog(task);
+            });
+
+            return el;
+        }
+
+        function render() {
+            completedZone.innerHTML = "";
+            executingZone.innerHTML = "";
+            taskStrip.innerHTML = "";
+
+            // 所有區域固定依預設時間排序：左新 → 右舊
+            const sortByTimeDesc = (a, b) =>
+                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+
+            const completed = tasks
+                .filter(t => t.status === "completed")
+                .sort(sortByTimeDesc);
+
+            const executing = tasks
+                .filter(t => t.status === "appeal")
+                .sort(sortByTimeDesc);
+
+            // 完成區的顯示上限依目前欄寬調整，窄畫面會自動減少。
+            const completedPageSize = getCompletedPageSize();
+            const completedPageCount = Math.max(
+                1,
+                Math.ceil(completed.length / completedPageSize)
+            );
+
+            completedPageIndex = Math.min(
+                completedPageIndex,
+                completedPageCount - 1
+            );
+
+            const completedStart = completedPageIndex * completedPageSize;
+            const visibleCompleted = completed.slice(
+                completedStart,
+                completedStart + completedPageSize
+            );
+
+            const completedCount = visibleCompleted.length;
+            // 依可用寬度自動計算卡片間隔，避免牌組超出完成區
+            const zoneWidth = completedZone.clientWidth || 500;
+            const cardWidth = 132;
+            // 加大卡片展開距離，減少完成區牌組的重疊。
+            const maxGap = 78;
+            const minGap = 28;
+            const availableWidth = Math.max(cardWidth, zoneWidth - 24);
+            const stackGap = completedCount <= 1
+                ? 0
+                : Math.max(
+                    minGap,
+                    Math.min(maxGap, (availableWidth - cardWidth) / (completedCount - 1))
+                );
+
+            visibleCompleted.forEach((t, i) => {
+                const card = taskCard(t);
+                card.style.setProperty("--stack-index", i);
+
+                const totalWidth = (completedCount - 1) * stackGap;
+                const offset = i * stackGap - totalWidth / 2;
+
+                card.style.setProperty("--stack-x", `${offset}px`);
+                completedZone.appendChild(card);
+            });
+
+            const completedPage = document.getElementById("completedPage");
+            const completedPrev = document.getElementById("completedPrev");
+            const completedNext = document.getElementById("completedNext");
+
+            if (completedPage) {
+                completedPage.textContent =
+                    `${completedPageIndex + 1} / ${completedPageCount}（每頁 ${completedPageSize} 張）`;
+            }
+
+            if (completedPrev) {
+                completedPrev.disabled = completedPageIndex <= 0;
+            }
+
+            if (completedNext) {
+                completedNext.disabled =
+                    completedPageIndex >= completedPageCount - 1;
+            }
+
+            // 申訴區也以左新右舊的方式分頁顯示。
+            const appealPageSize = getAppealPageSize();
+            const appealPageCount = Math.max(
+                1,
+                Math.ceil(executing.length / appealPageSize)
+            );
+            appealPageIndex = Math.min(appealPageIndex, appealPageCount - 1);
+            const appealStart = appealPageIndex * appealPageSize;
+            const visibleAppeals = executing.slice(
+                appealStart,
+                appealStart + appealPageSize
+            );
+
+            const appealPage = document.getElementById("appealPage");
+            const appealPrev = document.getElementById("appealPrev");
+            const appealNext = document.getElementById("appealNext");
+            appealPage.textContent =
+                `${appealPageIndex + 1} / ${appealPageCount}（每頁 ${appealPageSize} 張）`;
+            appealPrev.disabled = appealPageIndex <= 0;
+            appealNext.disabled = appealPageIndex >= appealPageCount - 1;
+
+            // 申訴區卡片較多時會縮小間距。
+            const executingCount = visibleAppeals.length;
+            const executingZoneWidth = executingZone.clientWidth || 230;
+            const executingCardWidth = 132;
+            const executingAvailableWidth = Math.max(
+                executingCardWidth,
+                executingZoneWidth - 24
+            );
+            const executingGap = executingCount <= 1
+                ? 0
+                : Math.min(
+                    78,
+                    Math.max(
+                        0,
+                        (executingAvailableWidth - executingCardWidth) /
+                        (executingCount - 1)
+                    )
+                );
+
+            visibleAppeals.forEach((t, i) => {
+                const card = taskCard(t);
+                card.style.setProperty("--stack-index", i);
+                const totalWidth = (executingCount - 1) * executingGap;
+                const offset = i * executingGap - totalWidth / 2;
+                card.style.setProperty("--stack-x", `${offset}px`);
+                executingZone.appendChild(card);
+            });
+
+            // 任務卡區只顯示進行中的任務；已完成與申訴中任務各自只留在所屬區域。
+            tasks
+                .filter(t => t.status === "available")
+                .slice()
+                .sort(sortByTimeDesc)
+                .forEach(t => taskStrip.appendChild(taskCard(t, "strip")));
+
+            if (!completed.length) completedZone.innerHTML = '<div class="empty">尚未完成任務</div>';
+            if (!executing.length) executingZone.innerHTML = '<div class="empty">目前沒有申訴中的任務</div>';
+
+            const percent = Math.round(tasks.reduce((sum, t) => sum + t.progress, 0) / tasks.length);
+            overallProgress.style.width = percent + "%";
+            overallPercent.textContent = percent + "%";
+
+            const lastTask = tasks.find(t => t.id === lastInfoTaskId);
+            if (lastTask) showTaskInfo(lastTask);
+        }
+
+        function moveTask(id, status) {
+            const task = tasks.find(t => t.id === Number(id));
+            if (!task) return;
+
+            // 申訴只能由「已完成」任務提出
+            if (status === "appeal" && task.status !== "completed") return;
+
+            // 不修改陣列順序；畫面永遠依 createdAt 排序
+            task.status = status;
+
+            // 完成後回到最新頁，確保剛完成的卡片立即出現在最左
+            if (status === "completed") {
+                completedPageIndex = 0;
+                task.progress = 100;
+            } else if (status === "appeal") {
+                // 申訴不等同於完成，保留原本完成度
+                appealPageIndex = 0;
+                task.progress = 100;
+            }
+
+            render();
+        }
+
+        dialogToggle.addEventListener("click", () => {
+            if (activeTaskId !== null) {
+                const task = tasks.find(t => t.id === activeTaskId);
+
+                if (task.status === "completed") {
+                    moveTask(activeTaskId, "appeal");
+                } else {
+                    moveTask(activeTaskId, "completed");
+                }
+
+                detailDialog.close();
+            }
+        });
+
+        dialogAppeal.addEventListener("click", () => {
+            if (activeTaskId !== null) {
+                const task = tasks.find(t => t.id === activeTaskId);
+
+                if (task.status === "appeal") {
+                    // 撤銷申訴：回到完成區
+                    moveTask(activeTaskId, "completed");
+                } else if (task.status === "completed") {
+                    // 只有已完成任務才能提出申訴
+                    moveTask(activeTaskId, "appeal");
+                }
+
+                detailDialog.close();
+            }
+        });
+
+        infoContent.addEventListener("click", event => {
+            const button = event.target.closest("[data-info-action]");
+            const actions = event.target.closest("[data-task-id]");
+            if (!button || !actions) return;
+
+            const task = tasks.find(t => t.id === Number(actions.dataset.taskId));
+            if (!task) return;
+
+            if (button.dataset.infoAction === "detail") {
+                openTaskDialog(task);
+            } else if (button.dataset.infoAction === "complete") {
+                moveTask(task.id, "completed");
+            } else if (button.dataset.infoAction === "appeal") {
+                moveTask(task.id, "appeal");
+            } else if (button.dataset.infoAction === "withdraw") {
+                moveTask(task.id, "completed");
+            }
+        });
+
+        function changeCompletedPage(direction) {
+            const count = tasks.filter(t => t.status === "completed").length;
+            const pageCount = Math.max(1, Math.ceil(count / getCompletedPageSize()));
+
+            const nextPage = Math.max(
+                0,
+                Math.min(pageCount - 1, completedPageIndex + direction)
+            );
+
+            if (nextPage === completedPageIndex) return;
+
+            const zone = document.querySelector(".completed-zone");
+            zone.classList.add("page-animating");
+
+            // 先淡出目前頁面，下一幀換頁，再淡入
+            setTimeout(() => {
+                completedPageIndex = nextPage;
+                render();
+
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        zone.classList.remove("page-animating");
+                    });
+                });
+            }, 180);
+        }
+
+        function changeAppealPage(direction) {
+            const count = tasks.filter(t => t.status === "appeal").length;
+            const pageCount = Math.max(1, Math.ceil(count / getAppealPageSize()));
+            const nextPage = Math.max(
+                0,
+                Math.min(pageCount - 1, appealPageIndex + direction)
+            );
+
+            if (nextPage === appealPageIndex) return;
+
+            const zone = document.querySelector(".appeal-zone");
+            zone.classList.add("page-animating");
+
+            setTimeout(() => {
+                appealPageIndex = nextPage;
+                render();
+
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        zone.classList.remove("page-animating");
+                    });
+                });
+            }, 180);
+        }
+
+        document.getElementById("completedPrev").addEventListener("click", () => {
+            // ▲：較新的 10 張
+            changeCompletedPage(-1);
+        });
+
+        document.getElementById("completedNext").addEventListener("click", () => {
+            // ▼：顯示下一批較舊的任務
+            changeCompletedPage(1);
+        });
+
+        document.getElementById("appealPrev").addEventListener("click", () => {
+            changeAppealPage(-1);
+        });
+
+        document.getElementById("appealNext").addEventListener("click", () => {
+            changeAppealPage(1);
+        });
+
+        let resizeRenderTimer;
+        window.addEventListener("resize", () => {
+            window.clearTimeout(resizeRenderTimer);
+            resizeRenderTimer = window.setTimeout(render, 120);
+        });
+
+        render();
+    </script>
+</body>
+
+</html>

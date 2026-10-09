@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>學習路徑</title>
+<style>
+    * { box-sizing: border-box; }
+
+    :root {
+        --page-bg: #f5f7f2;
+        --panel-bg: #ffffff;
+        --card-bg: #fbfcfa;
+        --border: #d5dbd3;
+        --line: #777d76;
+        --text: #2d332e;
+        --muted: #6e756e;
+        --green: #638a61;
+        --green-light: #edf4eb;
+        --node-border: #858b83;
+        --track: #e8ece7;
+    }
+
+    html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+    }
+
+    body {
+        overflow: hidden;
+        background: var(--page-bg);
+        color: var(--text);
+        font-family:
+            "Noto Sans TC",
+            "Microsoft JhengHei",
+            Arial,
+            sans-serif;
+        font-size: 14px;
+    }
+
+    .app {
+        width: 100%;
+        height: 100%;
+        padding: 10px 14px 8px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .topbar {
+        height: 30px;
+        flex: 0 0 30px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 4px;
+    }
+
+    .brand {
+        color: var(--green);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: .03em;
+    }
+
+    .course {
+        color: #222720;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .progress-shell {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+    }
+
+    .viewport {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        overflow-y: hidden;
+        border-radius: 4px;
+        background:
+            linear-gradient(to bottom,
+                rgba(232, 239, 232, .55) 0,
+                rgba(255,255,255,.18) 78px,
+                rgba(238,243,238,.55) 100%);
+        /* 使用下方固定寬度的自訂捲軸，隱藏原生捲軸。 */
+        scrollbar-width: none;
+        cursor: grab;
+        user-select: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .viewport.dragging {
+        cursor: grabbing;
+    }
+
+    .track {
+        position: relative;
+        height: 100%;
+        min-width: max-content;
+        display: flex;
+        gap: 10px;
+        padding: 10px 5px 14px;
+        /*
+         * 左右各預留「視窗寬度的一半」
+         * 讓第一張與最後一張卡片都可以被移到正中央。
+         * 實際寬度由 JS 動態設定。
+         */
+        scroll-snap-type: none;
+    }
+
+    .lesson {
+        position: relative;
+        width: 245px;
+        height: calc(100vh - 92px);
+        min-height: 390px;
+        max-height: 620px;
+        flex: 0 0 245px;
+        border: 1px dashed var(--border);
+        border-radius: 9px;
+        background:
+            linear-gradient(to bottom,
+                rgba(249,252,248,.98) 0%,
+                rgba(255,255,255,.96) 45%,
+                rgba(247,250,246,.95) 100%);
+        overflow: visible;
+
+        /* 每次吸附後，卡片本身就是唯一的中央目標 */
+        scroll-snap-align: center;
+        scroll-snap-stop: always;
+
+        transition:
+            border-color .18s ease,
+            box-shadow .18s ease,
+            transform .18s ease;
+    }
+
+    .lesson.centered {
+        border-color: #b8cbb4;
+        box-shadow: 0 0 0 1px rgba(99,138,97,.08);
+    }
+
+    /* dotted timeline */
+    .timeline {
+        position: absolute;
+        z-index: 1;
+        left: -1px;
+        right: -1px;
+        top: 91px;
+        border-top: 3px dotted var(--line);
+        pointer-events: none;
+    }
+
+    .title {
+        position: absolute;
+        z-index: 3;
+        top: 17px;
+        left: 10px;
+        right: 10px;
+        min-height: 43px;
+        text-align: center;
+        line-height: 1.45;
+        color: #4b514b;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .title .id {
+        display: block;
+        margin-bottom: 3px;
+        font-size: 10px;
+        color: #646a64;
+        font-weight: 500;
+    }
+
+    .title .name {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .node {
+        position: absolute;
+        z-index: 5;
+        top: 73px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 43px;
+        height: 43px;
+        border: 2px solid var(--node-border);
+        border-radius: 50%;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6d736c;
+        font-size: 15px;
+        font-weight: 500;
+    }
+
+    .node.done {
+        border-color: #6c956b;
+        color: #638a61;
+    }
+
+    .node.warn {
+        border-color: #c18a55;
+        color: #b8793e;
+    }
+
+    .node.error {
+        border-color: #b87569;
+        color: #b87569;
+    }
+
+    .caption {
+        position: absolute;
+        z-index: 3;
+        top: 125px;
+        left: 8px;
+        right: 8px;
+        text-align: center;
+        font-size: 12px;
+        line-height: 1.5;
+        font-weight: 700;
+        color: #313630;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .content {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 157px;
+        bottom: 0;
+        padding: 16px;
+        color: var(--muted);
+        font-size: 12px;
+    }
+
+    .content .placeholder {
+        width: 100%;
+        height: 100%;
+        border-radius: 5px;
+        opacity: .35;
+    }
+
+    /* subtle current-card treatment */
+    .lesson.active {
+        border-color: #c8d5c4;
+        background: linear-gradient(to bottom, #fbfdfb, #f7faf6);
+    }
+
+    .lesson.active .node {
+        box-shadow: 0 0 0 4px rgba(112, 143, 106, .08);
+    }
+
+    /* fake horizontal guide extending through every card */
+    .track::after {
+        content: "";
+        position: absolute;
+        left: 5px;
+        right: 5px;
+        top: 101px;
+        border-top: 1px dotted rgba(119,125,118,.38);
+        pointer-events: none;
+    }
+
+    .viewport::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* 固定寬度的自訂捲軸：不受視窗與內容寬度影響。 */
+    .custom-scrollbar {
+        --thumb-width: 72px;
+        position: absolute;
+        z-index: 10;
+        right: 0;
+        bottom: 2px;
+        left: 0;
+        height: 28px;
+        cursor: pointer;
+    }
+
+    .custom-scrollbar-track {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        height: 15px;
+        border-radius: 8px;
+        background: rgba(232,236,231,.92);
+    }
+
+    .custom-scrollbar-thumb {
+        position: absolute;
+        bottom: 2px;
+        left: 0;
+        width: var(--thumb-width);
+        height: 11px;
+        border-radius: 8px;
+        background: #666b67;
+        cursor: grab;
+    }
+
+    .custom-scrollbar-thumb.dragging {
+        cursor: grabbing;
+        background: #505550;
+    }
+
+    /* 原生捲軸保留為舊版瀏覽器的 fallback 樣式。 */
+    .viewport::-webkit-scrollbar {
+        height: 15px;
+    }
+
+    .viewport::-webkit-scrollbar-track {
+        background: rgba(232,236,231,.85);
+        border-radius: 8px;
+    }
+
+    .viewport::-webkit-scrollbar-thumb {
+        background: #666b67;
+        border-radius: 8px;
+        border: 4px solid rgba(232,236,231,.85);
+        background-clip: padding-box;
+    }
+
+    .viewport::-webkit-scrollbar-thumb:hover {
+        background: #505550;
+        border: 3px solid rgba(232,236,231,.85);
+        background-clip: padding-box;
+    }
+
+    /*
+     * 完成進度標記：箭頭指向捲軸上「最後一個 O 置中」的位置。
+     * 由 JS 依實際 viewport 與內容寬度動態定位。
+     */
+    .progress-marker {
+        position: absolute;
+        z-index: 2;
+        bottom: 10px;
+        left: 0;
+        width: 18px;
+        height: 18px;
+        display: grid;
+        place-items: center;
+        color: #638a61;
+        font-size: 18px;
+        line-height: 1;
+        pointer-events: none;
+        text-shadow: 0 1px 1px rgba(255, 255, 255, .9);
+        transform: translateX(-50%);
+    }
+
+    @media (max-width: 700px) {
+        .app { padding: 7px; }
+        .lesson {
+            width: 205px;
+            flex-basis: 205px;
+        }
+        .course { font-size: 12px; }
+    }
+</style>
+</head>
+<body>
+<div class="app">
+    <header class="topbar">
+        <div class="brand">學習路徑</div>
+        <div class="course">南一版(高一上)</div>
+    </header>
+
+    <div class="progress-shell">
+        <main class="viewport" id="viewport">
+            <div class="track" id="track"></div>
+        </main>
+        <div class="custom-scrollbar" id="customScrollbar" aria-label="課程捲動進度">
+            <div class="custom-scrollbar-track"></div>
+            <div
+                class="progress-marker"
+                id="progressMarker"
+                aria-label="最後完成課程的位置"
+                title="最後完成課程"
+            >▼</div>
+            <div class="custom-scrollbar-thumb" id="scrollbarThumb"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const lessons = [
+    ["[1-2]", "絕對值", "O", ""],
+    ["", "分點公式", "O", ""],
+    ["", "含絕對值的方程式與不等式", "O", ""],
+    ["[1-3]", "指數", "O", ""],
+    ["", "指數律", "O", ""],
+    ["", "平行與垂直", "O", ""],
+    ["[2-2]", "直線方程式的應用", "O", ""],
+    ["", "點到直線的距離", "X", ""],
+    ["", "坐標圖形的對稱", "X", ""],
+    ["", "半平面區域與二元一次不等式", "X", ""],
+    ["[2-3]", "圓方程式", "X", ""],
+    ["", "圓的標準式", "X", ""],
+    ["", "圓的一般式", "X", ""],
+    ["", "點與圓的關係", "X", ""],
+    ["", "圓與直線的關係", "X", ""],
+    ["[2-1]", "直線方程式及其圖形", "X", ""],
+    ["", "直線的斜率", "X", ""],
+    ["", "用點斜式決定直線方程式", "X", ""],
+    ["", "指數函數", "X", ""],
+    ["[1-4]", "常用對數", "X", ""],
+    ["", "科學記號", "X", ""],
+    ["", "常用對數", "X", ""],
+    ["", "分數公式", "X", ""],
+    ["", "含絕對值的方程式與不等式", "X", ""],
+    ["[1-3]", "指數", "X", ""],
+    ["", "指數律", "X", ""],
+    ["", "平行與垂直", "X", ""],
+    ["[2-2]", "直線方程式的應用", "X", ""],
+    ["", "點到直線的距離", "X", ""]
+];
+
+const track = document.getElementById("track");
+const viewport = document.getElementById("viewport");
+const customScrollbar = document.getElementById("customScrollbar");
+const scrollbarThumb = document.getElementById("scrollbarThumb");
+const progressMarker = document.getElementById("progressMarker");
+
+lessons.forEach((item, index) => {
+    const [id, name, state] = item;
+
+    const card = document.createElement("section");
+    card.className = "lesson" + (index === 0 ? " active" : "");
+    card.dataset.state = state;
+
+    const title = document.createElement("div");
+    title.className = "title";
+    title.innerHTML =
+        `<span class="id">${id || "&nbsp;"}</span>` +
+        `<span class="name">${name}</span>`;
+
+    const timeline = document.createElement("div");
+    timeline.className = "timeline";
+
+    const node = document.createElement("div");
+    node.className = "node" + (state === "O" ? " done" : " error");
+    node.textContent = state;
+
+    const caption = document.createElement("div");
+    caption.className = "caption";
+    caption.textContent = id ? `${id} ${name}` : name;
+
+    const content = document.createElement("div");
+    content.className = "content";
+    content.innerHTML = '<div class="placeholder"></div>';
+
+    card.append(title, timeline, node, caption, content);
+    track.appendChild(card);
+});
+
+/*
+ * ============================================================
+ *  中央節點控制
+ * ============================================================
+ *
+ *  規則：
+ *  1. 每次拖曳結束，一定吸附到某一張卡片。
+ *  2. 吸附完成後，只有一張卡片位於畫面正中央。
+ *  3. 第一張與最後一張也可以置中。
+ *  4. 使用者拖曳到兩張卡片中間時，自動判斷最近的卡片。
+ *  5. 節點會跟著中央卡片產生 active / centered 效果。
+ */
+
+const cards = [...document.querySelectorAll(".lesson")];
+
+let dragging = false;
+let startX = 0;
+let startScroll = 0;
+let moved = false;
+let snapTimer = null;
+
+/* ------------------------------------------------------------
+ * 設定左右留白
+ *
+ * 第一張：
+ *   左側空白 + 第一張卡片中心 = viewport 中心
+ *
+ * 最後一張：
+ *   最後一張卡片中心 = viewport 中心
+ *
+ * 所以左右空白都是：
+ *   (viewport 寬度 - 卡片寬度) / 2
+ * ------------------------------------------------------------ */
+function updateSideSpace() {
+    if (!cards.length) return;
+
+    const viewportWidth = viewport.clientWidth;
+    const cardWidth = cards[0].offsetWidth;
+
+    const sideSpace = Math.max(0, (viewportWidth - cardWidth) / 2);
+
+    track.style.paddingLeft = sideSpace + "px";
+    track.style.paddingRight = sideSpace + "px";
+
+    updateCustomScrollbar();
+}
+
+/* ------------------------------------------------------------
+ * 將最後一個完成（O）課程，映射到原生捲軸滑塊的中心位置。
+ * 公式同時考慮滑塊本身的寬度，所以滑塊中心碰到箭頭時，
+ * 畫面中央正好是最後一個 O。
+ * ------------------------------------------------------------ */
+function updateCustomScrollbar() {
+    const lastCompleted = cards.filter(card => card.dataset.state === "O").at(-1);
+    const thumbWidth = scrollbarThumb.offsetWidth;
+    const trackWidth = customScrollbar.clientWidth;
+    const thumbTravel = Math.max(0, trackWidth - thumbWidth);
+    const maxScroll = viewport.scrollWidth - viewport.clientWidth;
+    const scrollProgress = maxScroll ? viewport.scrollLeft / maxScroll : 0;
+
+    // 滑塊本身維持固定寬度，只改變 left 座標。
+    scrollbarThumb.style.left = (scrollProgress * thumbTravel) + "px";
+
+    if (!lastCompleted) {
+        progressMarker.hidden = true;
+        return;
+    }
+
+    progressMarker.hidden = false;
+
+    const completedScroll = Math.min(
+        maxScroll,
+        Math.max(0, getCenterScroll(lastCompleted))
+    );
+    const progress = maxScroll ? completedScroll / maxScroll : 0;
+
+    // 箭頭對準滑塊的中心；滑塊移到此處時正好是最後一個 O。
+    const markerLeft = thumbWidth / 2 + progress * thumbTravel;
+
+    progressMarker.style.left = markerLeft + "px";
+}
+
+/* ------------------------------------------------------------
+ * 自訂捲軸操作：滑塊與內容位置採一對一線性映射。
+ * 放開後仍吸附到唯一一張最接近中央的卡片。
+ * ------------------------------------------------------------ */
+function setScrollFromThumbPosition(clientX) {
+    const bounds = customScrollbar.getBoundingClientRect();
+    const thumbWidth = scrollbarThumb.offsetWidth;
+    const thumbTravel = Math.max(0, bounds.width - thumbWidth);
+    const thumbLeft = Math.min(
+        thumbTravel,
+        Math.max(0, clientX - bounds.left - thumbWidth / 2)
+    );
+    const maxScroll = viewport.scrollWidth - viewport.clientWidth;
+
+    viewport.scrollLeft = thumbTravel ? thumbLeft / thumbTravel * maxScroll : 0;
+}
+
+let scrollbarDragging = false;
+
+scrollbarThumb.addEventListener("pointerdown", e => {
+    if (e.button !== 0) return;
+
+    scrollbarDragging = true;
+    scrollbarThumb.classList.add("dragging");
+    scrollbarThumb.setPointerCapture(e.pointerId);
+    setScrollFromThumbPosition(e.clientX);
+    e.preventDefault();
+});
+
+scrollbarThumb.addEventListener("pointermove", e => {
+    if (!scrollbarDragging) return;
+    setScrollFromThumbPosition(e.clientX);
+});
+
+function stopScrollbarDrag() {
+    if (!scrollbarDragging) return;
+    scrollbarDragging = false;
+    scrollbarThumb.classList.remove("dragging");
+    snapToNearest();
+}
+
+scrollbarThumb.addEventListener("pointerup", stopScrollbarDrag);
+scrollbarThumb.addEventListener("pointercancel", stopScrollbarDrag);
+
+customScrollbar.addEventListener("pointerdown", e => {
+    if (e.target === scrollbarThumb) return;
+    setScrollFromThumbPosition(e.clientX);
+    snapToNearest();
+});
+
+viewport.addEventListener("scroll", updateCustomScrollbar, { passive: true });
+
+/* ------------------------------------------------------------
+ * 計算某張卡片需要的 scrollLeft
+ * ------------------------------------------------------------ */
+function getCenterScroll(card) {
+    return card.offsetLeft
+        - (viewport.clientWidth - card.offsetWidth) / 2;
+}
+
+/* ------------------------------------------------------------
+ * 找出目前最接近畫面中央的卡片
+ * ------------------------------------------------------------ */
+function getNearestCard() {
+    const viewportCenter =
+        viewport.scrollLeft + viewport.clientWidth / 2;
+
+    let nearest = cards[0];
+    let minDistance = Infinity;
+
+    cards.forEach(card => {
+        const cardCenter =
+            card.offsetLeft + card.offsetWidth / 2;
+
+        const distance = Math.abs(cardCenter - viewportCenter);
+
+        if (distance < minDistance) {
+            minDistance = distance;
+            nearest = card;
+        }
+    });
+
+    return nearest;
+}
+
+/* ------------------------------------------------------------
+ * 移動到指定卡片中央
+ * ------------------------------------------------------------ */
+function centerCard(card, smooth = true) {
+    if (!card) return;
+
+    const target = getCenterScroll(card);
+
+    viewport.scrollTo({
+        left: Math.max(0, target),
+        behavior: smooth ? "smooth" : "auto"
+    });
+
+    cards.forEach(x => {
+        x.classList.remove("active", "centered");
+    });
+
+    card.classList.add("active", "centered");
+}
+
+/* ------------------------------------------------------------
+ * 拖曳結束後自動補正
+ * ------------------------------------------------------------ */
+function snapToNearest() {
+    const card = getNearestCard();
+    centerCard(card, true);
+}
+
+/* ------------------------------------------------------------
+ * Pointer 拖曳
+ * ------------------------------------------------------------ */
+viewport.addEventListener("pointerdown", e => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+
+    dragging = true;
+    moved = false;
+
+    startX = e.clientX;
+    startScroll = viewport.scrollLeft;
+
+    viewport.classList.add("dragging");
+
+    /*
+     * 拖曳時暫時取消 scroll-snap，
+     * 避免瀏覽器在拖曳途中自行吸附。
+     */
+    viewport.style.scrollSnapType = "none";
+
+    viewport.setPointerCapture(e.pointerId);
+});
+
+viewport.addEventListener("pointermove", e => {
+    if (!dragging) return;
+
+    const dx = e.clientX - startX;
+
+    if (Math.abs(dx) > 4) {
+        moved = true;
+    }
+
+    viewport.scrollLeft = startScroll - dx;
+});
+
+function stopDrag() {
+    if (!dragging) return;
+
+    dragging = false;
+    viewport.classList.remove("dragging");
+
+    /*
+     * 下一幀再恢復 snap，
+     * 然後由 JS 明確指定唯一中央卡片。
+     */
+    requestAnimationFrame(() => {
+        viewport.style.scrollSnapType = "x mandatory";
+        snapToNearest();
+    });
+}
+
+viewport.addEventListener("pointerup", stopDrag);
+viewport.addEventListener("pointercancel", stopDrag);
+
+/* ------------------------------------------------------------
+ * 滑鼠滾輪 → 水平移動
+ * 結束後同樣自動吸附
+ * ------------------------------------------------------------ */
+viewport.addEventListener("wheel", e => {
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        viewport.scrollLeft += e.deltaY;
+        e.preventDefault();
+
+        clearTimeout(snapTimer);
+
+        snapTimer = setTimeout(() => {
+            snapToNearest();
+        }, 100);
+    }
+}, { passive: false });
+
+/* ------------------------------------------------------------
+ * 點擊卡片 → 直接置中
+ * 拖曳過程不視為點擊
+ * ------------------------------------------------------------ */
+cards.forEach(card => {
+    card.addEventListener("click", () => {
+        if (moved) return;
+        centerCard(card, true);
+    });
+});
+
+/* ------------------------------------------------------------
+ * 視窗尺寸改變
+ * 重新計算左右空白，並維持目前卡片置中
+ * ------------------------------------------------------------ */
+let resizeTimer = null;
+
+window.addEventListener("resize", () => {
+    clearTimeout(resizeTimer);
+
+    resizeTimer = setTimeout(() => {
+        updateSideSpace();
+
+        const active =
+            document.querySelector(".lesson.active") || cards[0];
+
+        centerCard(active, false);
+    }, 80);
+});
+
+/* ------------------------------------------------------------
+ * 初始化
+ * ------------------------------------------------------------ */
+updateSideSpace();
+
+requestAnimationFrame(() => {
+    centerCard(cards[0], false);
+});
+</script>
+</body>
+</html>
