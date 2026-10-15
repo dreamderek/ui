@@ -216,8 +216,8 @@
     <aside class="sidebar" aria-label="主導覽">
       <div class="brand">M</div>
       <nav class="nav" aria-label="主導覽">
-        <a href="tablet-ui-demo.html"><span>⌂</span>首頁</a>
-        <a href="assessment-task-demo.html" class="active" aria-current="page"><span>✓</span>評鑑</a>
+        <a href="student-home-demo.html"><span>⌂</span>首頁</a>
+        <a href="assessment-tasks-demo.html" class="active" aria-current="page"><span>✓</span>評鑑</a>
         <a href="learning-history-demo.html"><span>◴</span>歷程</a>
         <button type="button"><span>✉</span>訊息</button>
         <button type="button"><span>◉</span>帳號</button>
@@ -308,6 +308,10 @@
     function openTask(id) {
       selectedTask = id;
       const task = taskData[id];
+      if (task.state === 'completed') {
+        window.location.href = 'assessment-review-demo.html';
+        return;
+      }
       document.querySelector('#detailStatus').textContent = task.status;
       document.querySelector('#detailTitle').textContent = task.title;
       document.querySelector('#detailDescription').textContent = task.description;
@@ -413,6 +417,10 @@
     function openTask(id) {
       selectedTask = id;
       const task = taskData[id];
+      if (task.state === 'completed') {
+        window.location.href = 'assessment-review-demo.html';
+        return;
+      }
       document.querySelector('#detailStatus').textContent = task.status;
       document.querySelector('#detailTitle').textContent = task.title;
       document.querySelector('#detailDescription').textContent = task.description;
